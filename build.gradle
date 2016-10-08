@@ -1,0 +1,15 @@
+group 'tk.kleinhaneveld.cli'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'net.bytebuddy', name: 'bytebuddy', version: '1.4.29'
+    compile group: 'junit', name: 'junit', version: '4.12'
+}

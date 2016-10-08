@@ -1,0 +1,4 @@
+tk.kleinhaneveld.cli.parser.BooleanValueParser
+tk.kleinhaneveld.cli.parser.FileValueParser
+tk.kleinhaneveld.cli.parser.StringValueParser
+tk.kleinhaneveld.cli.parser.UrlValueParser
