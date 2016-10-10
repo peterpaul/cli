@@ -1,7 +1,8 @@
-package tk.kleinhaneveld.cli.test;
+package tk.kleinhaneveld.cli;
 
 import tk.kleinhaneveld.cli.Cli;
 import tk.kleinhaneveld.cli.parser.FileValueParser;
+import tk.kleinhaneveld.cli.parser.StringValueParser;
 import tk.kleinhaneveld.cli.parser.UrlValueParser;
 
 import java.io.File;
@@ -20,10 +21,8 @@ public class TestCommand {
     @Cli.Argument(description = "File argument, with registered ValueParser.", parser = FileValueParser.class)
     private File file;
 
-    /*
-    @Cli.Argument(description = "List of optional arguments, must occur as last argument.")
+    @Cli.Argument(description = "List of optional arguments, must occur as last argument.", parser = StringValueParser.class)
     private List<String> args;
-*/
 
     @Cli.Option(shortName = "v", description = "Option with name verbose, used as --verbose, or --verbose=true|false. Also accessible with -v os -v=true|false")
     private boolean verbose;
@@ -46,7 +45,7 @@ public class TestCommand {
                 "number=" + number +
                 ", anotherNumber=" + anotherNumber +
                 ", file=" + file +
-                //", args=" + args +
+                ", args=" + args +
                 ", verbose=" + verbose +
                 ", url=" + url +
                 '}';

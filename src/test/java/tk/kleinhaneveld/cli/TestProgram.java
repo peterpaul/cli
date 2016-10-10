@@ -1,15 +1,12 @@
-package tk.kleinhaneveld.cli.test;
+package tk.kleinhaneveld.cli;
 
 import org.junit.Test;
 import tk.kleinhaneveld.cli.ProgramRunner;
 
-/**
- * Created by peterpaul on 7-10-16.
- */
 public class TestProgram {
     @Test
     public void runTestCommand() {
         ProgramRunner programRunner = new ProgramRunner();
-        programRunner.run(new String[]{"1", "2", "test.txt"}, new TestCommand());
+        programRunner.run(new String[]{"1", "2", "test.txt", "--verbose", "--url=http://nu.nl", "fiets", "race"}, new TestCommand());
     }
 }

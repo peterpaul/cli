@@ -7,8 +7,8 @@ import tk.kleinhaneveld.cli.ValueParseException;
  */
 public class IntValueParser implements ValueParser<Integer> {
     @Override
-    public Class<Integer> getSupportedClass() {
-        return int.class;
+    public Class[] getSupportedClasses() {
+        return new Class[]{Integer.class, int.class};
     }
 
     @Override

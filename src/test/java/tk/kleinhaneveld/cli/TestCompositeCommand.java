@@ -1,4 +1,4 @@
-package tk.kleinhaneveld.cli.test;
+package tk.kleinhaneveld.cli;
 
 import tk.kleinhaneveld.cli.Cli;
 

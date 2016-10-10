@@ -6,8 +6,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 public class UrlValueParser implements ValueParser<URL> {
-    public Class<URL> getSupportedClass() {
-        return URL.class;
+    public Class[] getSupportedClasses() {
+        return new Class[]{URL.class};
     }
 
     public URL parse(String argument) throws ValueParseException {
