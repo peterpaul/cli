@@ -1,9 +1,8 @@
 package com.github.peterpaul.cli;
 
-import com.github.peterpaul.cli.parser.*;
 import com.github.peterpaul.cli.collection.ListUtil;
 import com.github.peterpaul.cli.collection.TooManyElementException;
-import com.github.peterpaul.cli.fn.Pair;
+import com.github.peterpaul.cli.parser.ValueParser;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -13,18 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ProgramRunner {
-    private final Map<Class, ValueParser> valueParserMap;
-
-    public ProgramRunner() {
-        valueParserMap = Stream.of(
-                new BooleanValueParser(),
-                new FileValueParser(),
-                new IntValueParser(),
-                new StringValueParser(),
-                new UrlValueParser())
-                .flatMap(p -> Arrays.stream(p.getSupportedClasses()).map(c -> Pair.of(c, p)))
-                .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
-    }
+    private final ValueParserProvider valueParserProvider = new ValueParserProvider();
 
     public void run(String[] arguments, Object command) {
         parseOptions(arguments, command);
@@ -117,8 +105,8 @@ public class ProgramRunner {
     }
 
     private boolean argumentParserDoesNotMatchFieldType(Field field, Cli.Argument argumentAnnotation) {
-        return !Arrays.asList(getValueParser(field, argumentAnnotation.parser()).getSupportedClasses())
-        .contains(field.getType());
+        return !Arrays.asList(valueParserProvider.getValueParser(field, argumentAnnotation.parser()).getSupportedClasses())
+                .contains(field.getType());
     }
 
     private static boolean isLastArgument(List<Field> declaredArgumentList, int i) {
@@ -149,26 +137,10 @@ public class ProgramRunner {
     }
 
     private Object parseValue(Field field, String value, Class<? extends ValueParser> valueParserClass) {
-        ValueParser valueParser = getValueParser(field, valueParserClass);
+        ValueParser valueParser = valueParserProvider.getValueParser(field, valueParserClass);
         return valueParser.parse(value);
     }
 
-    private ValueParser getValueParser(Field field, Class<? extends ValueParser> parserClass) {
-        ValueParser valueParser;
-        if (parserClass != ValueParser.class) {
-            try {
-                valueParser = parserClass.newInstance();
-            } catch (InstantiationException | IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            valueParser = valueParserMap.get(field.getType());
-            if (valueParser == null) {
-                throw new ValueParseException("No ValueParser registered for: " + field.getType().getCanonicalName());
-            }
-        }
-        return valueParser;
-    }
 
     private static Optional<String> getOptionValue(Map<String, String> optionMap, Field field) {
         Cli.Option optionAnnotation = field.getAnnotation(Cli.Option.class);
