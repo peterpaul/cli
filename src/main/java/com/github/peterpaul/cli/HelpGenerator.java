@@ -7,6 +7,8 @@ public class HelpGenerator {
             .firstLineIndentation(0).indentation(4).lineWidth(80).build();
     private static final ImmutableSectionConfiguration ARGUMENT_LEVEL_SECTION = ImmutableSectionConfiguration.builder()
             .firstLineIndentation(4).indentation(8).lineWidth(80).build();
+    private static final ImmutableSectionConfiguration OPTION_LEVEL_SECTION = ImmutableSectionConfiguration.builder()
+            .firstLineIndentation(16).indentation(16).lineWidth(80).build();
     private final ArgumentParserMatcher argumentParserMatcher;
 
     public HelpGenerator(ArgumentParserMatcher argumentParserMatcher) {
@@ -58,12 +60,15 @@ public class HelpGenerator {
         return FieldsProvider.getOptionStream(command.getClass())
                 .map(optionField -> {
                     Cli.Option optionFieldAnnotation = optionField.getAnnotation(Cli.Option.class);
-                    return OutputHelper.ofSize((Objects.equals(optionFieldAnnotation.shortName(), '\0')
-                    ? ""
-                    : "-" + optionFieldAnnotation.shortName() + ",") + "--" + FieldsProvider.getName(optionField, optionFieldAnnotation.name()) + ":", 12) +
-                            optionFieldAnnotation.description();
+                    String shortOptionString = Objects.equals(optionFieldAnnotation.shortName(),
+                            '\0')
+                            ? ""
+                            : "-" + optionFieldAnnotation.shortName() + ",";
+                    String optionNameString = "--" + FieldsProvider.getName(optionField, optionFieldAnnotation.name());
+                    return OutputHelper.format(OutputHelper.ofSize(shortOptionString + optionNameString, 12) + AnnotationHelper.fromEmpty(optionFieldAnnotation.defaultValue()).map(defaultValue -> "default: " + defaultValue).orElse(""),
+                            ARGUMENT_LEVEL_SECTION) + '\n' +
+                            OutputHelper.format(optionFieldAnnotation.description(), OPTION_LEVEL_SECTION);
                 })
-                .map(option -> OutputHelper.format(option, ARGUMENT_LEVEL_SECTION))
                 .reduce("OPTIONS:", (state, opt) -> (state + "\n" + opt));
     }
 

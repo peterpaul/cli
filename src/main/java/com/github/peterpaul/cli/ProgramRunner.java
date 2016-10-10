@@ -37,7 +37,7 @@ public class ProgramRunner {
     private static Optional<String> getOptionValue(Map<String, String> optionMap, Field field) {
         Cli.Option optionAnnotation = field.getAnnotation(Cli.Option.class);
         String name = FieldsProvider.getName(field, optionAnnotation.name());
-        return Stream.of(
+        Optional<String> valueFromCommandLine = Stream.of(
                 "--" + name,
                 "-" + optionAnnotation.shortName())
 
@@ -45,6 +45,11 @@ public class ProgramRunner {
                 .map(optionMap::get)
                 .filter(n -> n != null)
                 .findFirst();
+        if (valueFromCommandLine.isPresent()) {
+            return valueFromCommandLine;
+        } else {
+            return AnnotationHelper.fromEmpty(optionAnnotation.defaultValue());
+        }
     }
 
     public void run(String[] arguments, Object command) {

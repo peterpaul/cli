@@ -29,6 +29,9 @@ public class TestCommand {
     @Cli.Option(name = "url", description = "Url option, with ValueParser.", parser = UrlValueParser.class)
     private URL url;
 
+    @Cli.Option(description = "Option with default value", defaultValue = "7")
+    private int level;
+
     /*
      * The Command framework will search for a method with the name run, and/or the annotation {@link Cli#Run}.
      * A Command must have no arguments, and be void. There can only be one such method per Command class.
@@ -47,6 +50,7 @@ public class TestCommand {
                 ", args=" + args +
                 ", verbose=" + verbose +
                 ", url=" + url +
+                ", level=" + level +
                 '}';
     }
 }
