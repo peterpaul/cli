@@ -1,5 +1,7 @@
 package com.github.peterpaul.cli.fn;
 
+import java.util.Objects;
+
 public class Pair<L, R> {
     private final L left;
     private final R right;
@@ -36,15 +38,12 @@ public class Pair<L, R> {
 
         Pair<?, ?> pair = (Pair<?, ?>) o;
 
-        if (!left.equals(pair.left)) return false;
-        return right.equals(pair.right);
-
+        return Objects.equals(left, pair.left)
+                && Objects.equals(right, pair.right);
     }
 
     @Override
     public int hashCode() {
-        int result = left.hashCode();
-        result = 31 * result + right.hashCode();
-        return result;
+        return Objects.hash(left, right);
     }
 }

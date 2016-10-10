@@ -58,7 +58,7 @@ public class HelpGenerator {
         return FieldsProvider.getOptionStream(command.getClass())
                 .map(optionField -> {
                     Cli.Option optionFieldAnnotation = optionField.getAnnotation(Cli.Option.class);
-                    return OutputHelper.ofSize((Objects.equals(optionFieldAnnotation.shortName(), "")
+                    return OutputHelper.ofSize((Objects.equals(optionFieldAnnotation.shortName(), '\0')
                     ? ""
                     : "-" + optionFieldAnnotation.shortName() + ",") + "--" + FieldsProvider.getName(optionField, optionFieldAnnotation.name()) + ":", 12) +
                             optionFieldAnnotation.description();

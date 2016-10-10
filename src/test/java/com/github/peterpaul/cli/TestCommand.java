@@ -1,8 +1,8 @@
 package com.github.peterpaul.cli;
 
-import com.github.peterpaul.cli.parser.UrlValueParser;
 import com.github.peterpaul.cli.parser.FileValueParser;
 import com.github.peterpaul.cli.parser.StringValueParser;
+import com.github.peterpaul.cli.parser.UrlValueParser;
 
 import java.io.File;
 import java.net.URL;
@@ -23,7 +23,7 @@ public class TestCommand {
     @Cli.Argument(description = "List of optional arguments, must occur as last argument.", parser = StringValueParser.class)
     private List<String> args;
 
-    @Cli.Option(shortName = "v", description = "Option with name verbose, used as --verbose, or --verbose=true|false. Also accessible with -v os -v=true|false")
+    @Cli.Option(shortName = 'v', description = "Option with name verbose, used as --verbose, or --verbose=true|false. Also accessible with -v os -v=true|false")
     private boolean verbose;
 
     @Cli.Option(name = "url", description = "Url option, with ValueParser.", parser = UrlValueParser.class)
