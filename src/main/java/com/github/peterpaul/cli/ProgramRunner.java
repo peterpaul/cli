@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -116,7 +117,7 @@ public class ProgramRunner {
     private Object parseValue(Field field, String value, Class<? extends ValueParser> valueParserClass, String[] values) {
         ValueParser valueParser = valueParserProvider.getValueParser(field, valueParserClass);
         return AnnotationHelper.checkedValue(value, values)
-                .map(v -> valueParser.parse(v))
+                .map((Function<String, Object>) valueParser::parse)
                 .orElseThrow(() -> new ValueParseException("value '" + value + "' not allowed, allowed are '" + Arrays.asList(values) + "'"));
     }
 }
