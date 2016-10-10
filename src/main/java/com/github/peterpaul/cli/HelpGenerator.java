@@ -59,15 +59,17 @@ public class HelpGenerator {
     private String getOptionHelp(Object command) {
         return FieldsProvider.getOptionStream(command.getClass())
                 .map(optionField -> {
-                    Cli.Option optionFieldAnnotation = optionField.getAnnotation(Cli.Option.class);
-                    String shortOptionString = Objects.equals(optionFieldAnnotation.shortName(),
+                    Cli.Option annotation = optionField.getAnnotation(Cli.Option.class);
+                    String shortOptionString = Objects.equals(annotation.shortName(),
                             '\0')
                             ? ""
-                            : "-" + optionFieldAnnotation.shortName() + ",";
-                    String optionNameString = "--" + FieldsProvider.getName(optionField, optionFieldAnnotation.name());
-                    return OutputHelper.format(OutputHelper.ofSize(shortOptionString + optionNameString, 12) + AnnotationHelper.fromEmpty(optionFieldAnnotation.defaultValue()).map(defaultValue -> "default: " + defaultValue).orElse(""),
+                            : "-" + annotation.shortName() + ",";
+                    String optionNameString = "--" + FieldsProvider.getName(optionField, annotation.name());
+                    String defaultValueString = AnnotationHelper.fromEmpty(annotation.defaultValue()).map(defaultValue -> "default: " + defaultValue).orElse("");
+                    String valuesString = AnnotationHelper.valueStream(annotation.values()).map(v -> "(" + v.reduce((s, t) -> s + "|" + t).get() + ") ").orElse("");
+                    return OutputHelper.format(OutputHelper.ofSize(shortOptionString + optionNameString, 12) + valuesString + defaultValueString,
                             ARGUMENT_LEVEL_SECTION) + '\n' +
-                            OutputHelper.format(optionFieldAnnotation.description(), OPTION_LEVEL_SECTION);
+                            OutputHelper.format(annotation.description(), OPTION_LEVEL_SECTION);
                 })
                 .reduce("OPTIONS:", (state, opt) -> (state + "\n" + opt));
     }

@@ -29,7 +29,7 @@ public class TestCommand {
     @Cli.Option(name = "url", description = "Url option, with ValueParser.", parser = UrlValueParser.class)
     private URL url;
 
-    @Cli.Option(description = "Option with default value", defaultValue = "7")
+    @Cli.Option(description = "Option with default value", values = {"3", "5", "7"}, defaultValue = "7")
     private int level;
 
     /*

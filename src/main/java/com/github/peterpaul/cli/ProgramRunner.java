@@ -85,13 +85,13 @@ public class ProgramRunner {
             if (isLastArgument(declaredArgumentList, i)
                     && argumentParserMatcher.argumentParserDoesNotMatchFieldType(field, argumentAnnotation)) {
                 List<Object> value = argumentList.stream()
-                        .map(a -> parseValue(field, a, argumentAnnotation.parser()))
+                        .map(a -> parseValue(field, a, argumentAnnotation.parser(), argumentAnnotation.values()))
                         .collect(Collectors.toList());
                 argumentList.clear();
                 setFieldValue(command, field, value);
             } else {
                 String value = argumentList.remove(0);
-                Object parsedValue = parseValue(field, value, argumentAnnotation.parser());
+                Object parsedValue = parseValue(field, value, argumentAnnotation.parser(), argumentAnnotation.values());
                 setFieldValue(command, field, parsedValue);
             }
         }
@@ -107,14 +107,16 @@ public class ProgramRunner {
                     Cli.Option optionAnnotation = field.getAnnotation(Cli.Option.class);
                     Optional<String> value = getOptionValue(optionMap, field);
                     if (value.isPresent()) {
-                        Object parsedValue = parseValue(field, value.get(), optionAnnotation.parser());
+                        Object parsedValue = parseValue(field, value.get(), optionAnnotation.parser(), optionAnnotation.values());
                         setFieldValue(command, field, parsedValue);
                     }
                 });
     }
 
-    private Object parseValue(Field field, String value, Class<? extends ValueParser> valueParserClass) {
+    private Object parseValue(Field field, String value, Class<? extends ValueParser> valueParserClass, String[] values) {
         ValueParser valueParser = valueParserProvider.getValueParser(field, valueParserClass);
-        return valueParser.parse(value);
+        return AnnotationHelper.checkedValue(value, values)
+                .map(v -> valueParser.parse(v))
+                .orElseThrow(() -> new ValueParseException("value '" + value + "' not allowed, allowed are '" + Arrays.asList(values) + "'"));
     }
 }

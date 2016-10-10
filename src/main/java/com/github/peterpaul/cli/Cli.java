@@ -29,6 +29,8 @@ public @interface Cli {
 
         String description();
 
+        String[] values() default {};
+
         Class<? extends ValueParser> parser() default ValueParser.class;
     }
 
@@ -37,13 +39,15 @@ public @interface Cli {
     @interface Option {
         String name() default "";
 
-        char shortName() default '\0';
-
         String description();
 
-        String defaultValue() default "";
+        String[] values() default {};
 
         Class<? extends ValueParser> parser() default ValueParser.class;
+
+        char shortName() default '\0';
+
+        String defaultValue() default "";
     }
 
     @Target({ElementType.METHOD})
