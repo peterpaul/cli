@@ -16,7 +16,7 @@ public class ValueParserProvider {
         valueParserMap = Stream.of(
                 new BooleanValueParser(),
                 new FileValueParser(),
-                //new IntValueParser(),
+                new IntValueParser(),
                 new StringValueParser(),
                 new UrlValueParser())
                 .flatMap(p -> Arrays.stream(p.getSupportedClasses()).map(c -> Pair.of(c, p)))
