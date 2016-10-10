@@ -58,4 +58,12 @@ public class OutputHelper {
             return rec + rec + spaces(remainder);
         }
     }
+
+    public static String ofSize(String content, int size) {
+        if (size > content.length()) {
+            return content + spaces(size - content.length());
+        } else {
+            return content + " ";
+        }
+    }
 }

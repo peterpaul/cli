@@ -11,7 +11,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ProgramRunner {
-    private final ValueParserProvider valueParserProvider = new ValueParserProvider();
+    private final ArgumentParserMatcher argumentParserMatcher;
+    private final HelpGenerator helpGenerator;
+    private final ValueParserProvider valueParserProvider;
+
+    public ProgramRunner() {
+        valueParserProvider = new ValueParserProvider();
+        argumentParserMatcher = new ArgumentParserMatcher(valueParserProvider);
+        helpGenerator = new HelpGenerator(argumentParserMatcher);
+    }
 
     private static boolean isLastArgument(List<Field> declaredArgumentList, int i) {
         return i == declaredArgumentList.size() - 1;
@@ -45,7 +53,7 @@ public class ProgramRunner {
             parseArguments(arguments, command);
             CommandRunner.runCommand(command);
         } catch (ValueParseException e) {
-            System.err.println(HelpGenerator.generateHelp(command, e.getMessage()));
+            System.err.println(helpGenerator.generateHelp(command, e.getMessage()));
         }
     }
 
@@ -70,7 +78,7 @@ public class ProgramRunner {
             Field field = declaredArgumentList.get(i);
             Cli.Argument argumentAnnotation = field.getAnnotation(Cli.Argument.class);
             if (isLastArgument(declaredArgumentList, i)
-                    && argumentParserDoesNotMatchFieldType(field, argumentAnnotation)) {
+                    && argumentParserMatcher.argumentParserDoesNotMatchFieldType(field, argumentAnnotation)) {
                 List<Object> value = argumentList.stream()
                         .map(a -> parseValue(field, a, argumentAnnotation.parser()))
                         .collect(Collectors.toList());
@@ -85,11 +93,6 @@ public class ProgramRunner {
         if (!argumentList.isEmpty()) {
             throw new ValueParseException("Received unhandled arguments: " + argumentList);
         }
-    }
-
-    private boolean argumentParserDoesNotMatchFieldType(Field field, Cli.Argument argumentAnnotation) {
-        return !Arrays.asList(valueParserProvider.getValueParser(field, argumentAnnotation.parser()).getSupportedClasses())
-                .contains(field.getType());
     }
 
     private void handleOptions(Object command, Map<String, String> optionMap) {
