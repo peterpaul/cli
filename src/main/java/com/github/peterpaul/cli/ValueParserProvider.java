@@ -34,7 +34,7 @@ public class ValueParserProvider {
         } else {
             valueParser = valueParserMap.get(field.getType());
             if (valueParser == null) {
-                throw new ValueParseException("No ValueParser registered for: " + field.getType().getCanonicalName());
+                throw new ValueParseException("No ValueParser registered for: '" + field.getDeclaringClass().getCanonicalName() + "::" + field.getName()+ ": "  + field.getType().getCanonicalName() +  "', please specify one using the 'parser' attribute of the Cli annnotation.");
             }
         }
         return valueParser;
