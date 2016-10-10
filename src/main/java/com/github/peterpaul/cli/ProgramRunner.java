@@ -11,9 +11,13 @@ public class ProgramRunner {
     private final ValueParserProvider valueParserProvider = new ValueParserProvider();
 
     public void run(String[] arguments, Object command) {
-        parseOptions(arguments, command);
-        parseArguments(arguments, command);
-        CommandRunner.runCommand(command);
+        try {
+            parseOptions(arguments, command);
+            parseArguments(arguments, command);
+            CommandRunner.runCommand(command);
+        } catch (ValueParseException e) {
+            System.err.println(HelpGenerator.generateHelp(command, e.getMessage()));
+        }
     }
 
     private void parseArguments(String[] arguments, Object command) {
