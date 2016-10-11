@@ -19,13 +19,13 @@ public class HelpGenerator {
     public static String generateHelp(Object command) {
         Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
         if (commandAnnotation.subCommands().length == 0) {
-            return getNameAndDescription(commandAnnotation) + "\n"
+            return getNameAndDescription(commandAnnotation) + "\n\n"
                     + getUsage(command) + "\n"
                     + getArgumentHelp(command) + "\n"
                     + getOptionHelp(command)
                     ;
         } else {
-            return getNameAndDescription(commandAnnotation) + "\n"
+            return getNameAndDescription(commandAnnotation) + "\n\n"
                     + OutputHelper.format("USAGE: " + commandAnnotation.name() + " [OPTION...] COMMAND", TOP_LEVEL_SECTION) + "\n"
                     + getSubCommands(commandAnnotation) + "\n"
                     + getOptionHelp(commandAnnotation)
@@ -75,8 +75,8 @@ public class HelpGenerator {
                             ? ""
                             : "-" + annotation.shortName() + ",";
                     String optionNameString = "--" + FieldsProvider.getName(optionField, annotation.name());
-                    String defaultValueString = AnnotationHelper.fromEmpty(annotation.defaultValue()).map(defaultValue -> "default: " + defaultValue).orElse("");
-                    String valuesString = AnnotationHelper.valueStream(annotation.values()).map(v -> "(" + v.reduce((s, t) -> s + "|" + t).get() + ") ").orElse("");
+                    String defaultValueString = AnnotationHelper.fromEmpty(annotation.defaultValue()).map(defaultValue -> "default: '" + defaultValue + "'").orElse("");
+                    String valuesString = AnnotationHelper.valueStream(annotation.values()).map(v -> "('" + v.reduce((s, t) -> s + "', '" + t).get() + "') ").orElse("");
                     return OutputHelper.format(OutputHelper.ofSize(shortOptionString + optionNameString, 12) + valuesString + defaultValueString,
                             ARGUMENT_LEVEL_SECTION) + '\n' +
                             OutputHelper.format(annotation.description(), OPTION_LEVEL_SECTION);
