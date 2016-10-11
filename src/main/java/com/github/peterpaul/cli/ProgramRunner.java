@@ -12,6 +12,16 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ProgramRunner {
+    public static void run(String[] arguments, Object command) {
+        try {
+            parseOptions(arguments, command);
+            parseArguments(arguments, command);
+            CommandRunner.runCommand(command);
+        } catch (ValueParseException e) {
+            System.err.println(HelpGenerator.generateHelp(command, e.getMessage()));
+        }
+    }
+
     private static boolean isLastArgument(List<Field> declaredArgumentList, int i) {
         return i == declaredArgumentList.size() - 1;
     }
@@ -40,16 +50,6 @@ public class ProgramRunner {
             return valueFromCommandLine;
         } else {
             return AnnotationHelper.fromEmpty(optionAnnotation.defaultValue());
-        }
-    }
-
-    public static void run(String[] arguments, Object command) {
-        try {
-            parseOptions(arguments, command);
-            parseArguments(arguments, command);
-            CommandRunner.runCommand(command);
-        } catch (ValueParseException e) {
-            System.err.println(HelpGenerator.generateHelp(command, e.getMessage()));
         }
     }
 
