@@ -35,7 +35,7 @@ public class HelpGenerator {
 
     private static String getSubCommands(Cli.Command commandAnnotation) {
         return Arrays.stream(commandAnnotation.subCommands())
-                .map(c -> AnnotationHelper.getCommandAnnotation(c))
+                .map(AnnotationHelper::getCommandAnnotation)
                 .map(c -> OutputHelper.format(OutputHelper.ofSize(c.name(), 12) + c.description(), ARGUMENT_LEVEL_SECTION))
                 .reduce("COMMAND:", (s, t) -> s + "\n" + t);
     }
