@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ValueParserProvider {
-    private final Map<Class, ValueParser> valueParserMap;
+    private static final Map<Class, ValueParser> valueParserMap;
 
-    public ValueParserProvider() {
+    static {
         valueParserMap = Stream.of(
                 new BooleanValueParser(),
                 new FileValueParser(),
@@ -23,7 +23,7 @@ public class ValueParserProvider {
                 .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
     }
 
-    public ValueParser getValueParser(Field field, Class<? extends ValueParser> parserClass) {
+    public static ValueParser getValueParser(Field field, Class<? extends ValueParser> parserClass) {
         ValueParser valueParser;
         if (parserClass != ValueParser.class) {
             try {

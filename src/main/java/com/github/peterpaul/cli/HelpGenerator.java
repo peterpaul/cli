@@ -9,18 +9,13 @@ public class HelpGenerator {
             .firstLineIndentation(4).indentation(8).lineWidth(80).build();
     private static final ImmutableSectionConfiguration OPTION_LEVEL_SECTION = ImmutableSectionConfiguration.builder()
             .firstLineIndentation(16).indentation(16).lineWidth(80).build();
-    private final ArgumentParserMatcher argumentParserMatcher;
 
-    public HelpGenerator(ArgumentParserMatcher argumentParserMatcher) {
-        this.argumentParserMatcher = argumentParserMatcher;
-    }
-
-    public String generateHelp(Object command, String error) {
+    public static String generateHelp(Object command, String error) {
         return OutputHelper.format("Error: " + error, TOP_LEVEL_SECTION) + "\n\n" +
                 generateHelp(command);
     }
 
-    public String generateHelp(Object command) {
+    public static String generateHelp(Object command) {
         Cli.Command commandAnnotation = command.getClass().getAnnotation(Cli.Command.class);
 
         return getNameAndDescription(commandAnnotation) + "\n"
@@ -30,14 +25,14 @@ public class HelpGenerator {
                 ;
     }
 
-    private String getUsage(Object command) {
+    private static String getUsage(Object command) {
         Cli.Command commandAnnotation = command.getClass().getAnnotation(Cli.Command.class);
         return OutputHelper.format("USAGE: " + commandAnnotation.name() + " [OPTION...] " +
                         FieldsProvider.getArgumentStream(command.getClass())
                                 .map((arg) -> {
                                     Cli.Argument argumentAnnotation = arg.getAnnotation(Cli.Argument.class);
                                     String nameString = FieldsProvider.getName(arg, argumentAnnotation.name());
-                                    return argumentParserMatcher.argumentParserDoesNotMatchFieldType(arg, argumentAnnotation)
+                                    return ArgumentParserMatcher.argumentParserDoesNotMatchFieldType(arg, argumentAnnotation)
                                             ? "[" + nameString + "...]"
                                             : nameString;
                                 })
@@ -45,7 +40,7 @@ public class HelpGenerator {
                 TOP_LEVEL_SECTION);
     }
 
-    private String getArgumentHelp(Object command) {
+    private static String getArgumentHelp(Object command) {
         return FieldsProvider.getArgumentStream(command.getClass())
                 .map(argumentField -> {
                     Cli.Argument argumentFieldAnnotation = argumentField.getAnnotation(Cli.Argument.class);
@@ -56,7 +51,7 @@ public class HelpGenerator {
                 .reduce("WHERE:", (state, arg) -> (state + "\n" + arg));
     }
 
-    private String getOptionHelp(Object command) {
+    private static String getOptionHelp(Object command) {
         return FieldsProvider.getOptionStream(command.getClass())
                 .map(optionField -> {
                     Cli.Option annotation = optionField.getAnnotation(Cli.Option.class);
