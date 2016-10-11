@@ -1,5 +1,6 @@
 package com.github.peterpaul.cli;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 public class HelpGenerator {
@@ -16,21 +17,35 @@ public class HelpGenerator {
     }
 
     public static String generateHelp(Object command) {
-        Cli.Command commandAnnotation = command.getClass().getAnnotation(Cli.Command.class);
+        Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
+        if (commandAnnotation.subCommands().length == 0) {
+            return getNameAndDescription(commandAnnotation) + "\n"
+                    + getUsage(command) + "\n"
+                    + getArgumentHelp(command) + "\n"
+                    + getOptionHelp(command)
+                    ;
+        } else {
+            return getNameAndDescription(commandAnnotation) + "\n"
+                    + OutputHelper.format("USAGE: " + commandAnnotation.name() + " [OPTION...] COMMAND", TOP_LEVEL_SECTION) + "\n"
+                    + getSubCommands(commandAnnotation) + "\n"
+                    + getOptionHelp(commandAnnotation)
+                    ;
+        }
+    }
 
-        return getNameAndDescription(commandAnnotation) + "\n"
-                + getUsage(command) + "\n"
-                + getArgumentHelp(command) + "\n"
-                + getOptionHelp(command)
-                ;
+    private static String getSubCommands(Cli.Command commandAnnotation) {
+        return Arrays.stream(commandAnnotation.subCommands())
+                .map(c -> AnnotationHelper.getCommandAnnotation(c))
+                .map(c -> OutputHelper.format(OutputHelper.ofSize(c.name(), 12) + c.description(), ARGUMENT_LEVEL_SECTION))
+                .reduce("COMMAND:", (s, t) -> s + "\n" + t);
     }
 
     private static String getUsage(Object command) {
-        Cli.Command commandAnnotation = command.getClass().getAnnotation(Cli.Command.class);
+        Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
         return OutputHelper.format("USAGE: " + commandAnnotation.name() + " [OPTION...] " +
                         FieldsProvider.getArgumentStream(command.getClass())
                                 .map((arg) -> {
-                                    Cli.Argument argumentAnnotation = arg.getAnnotation(Cli.Argument.class);
+                                    Cli.Argument argumentAnnotation = AnnotationHelper.getArgumentAnnotation(arg);
                                     String nameString = FieldsProvider.getName(arg, argumentAnnotation.name());
                                     return ArgumentParserMatcher.argumentParserDoesNotMatchFieldType(arg, argumentAnnotation)
                                             ? "[" + nameString + "...]"
@@ -43,7 +58,7 @@ public class HelpGenerator {
     private static String getArgumentHelp(Object command) {
         return FieldsProvider.getArgumentStream(command.getClass())
                 .map(argumentField -> {
-                    Cli.Argument argumentFieldAnnotation = argumentField.getAnnotation(Cli.Argument.class);
+                    Cli.Argument argumentFieldAnnotation = AnnotationHelper.getArgumentAnnotation(argumentField);
                     return OutputHelper.ofSize(FieldsProvider.getName(argumentField, argumentFieldAnnotation.name()) + ":",
                             12) + argumentFieldAnnotation.description();
                 })
@@ -54,7 +69,7 @@ public class HelpGenerator {
     private static String getOptionHelp(Object command) {
         return FieldsProvider.getOptionStream(command.getClass())
                 .map(optionField -> {
-                    Cli.Option annotation = optionField.getAnnotation(Cli.Option.class);
+                    Cli.Option annotation = AnnotationHelper.getOptionAnnotation(optionField);
                     String shortOptionString = Objects.equals(annotation.shortName(),
                             '\0')
                             ? ""

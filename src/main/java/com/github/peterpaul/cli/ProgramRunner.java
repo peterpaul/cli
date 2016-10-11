@@ -12,18 +12,54 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ProgramRunner {
-    public static void run(String[] arguments, Object command) {
+    public static void run(Object command, String[] arguments) {
+        run(command, getArgumentList(arguments), getOptionMap(arguments));
+    }
+
+    public static void run(Object command, List<String> argumentList, Map<String, String> optionMap) {
         try {
-            parseOptions(arguments, command);
-            parseArguments(arguments, command);
-            CommandRunner.runCommand(command);
+            Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
+            if (commandAnnotation.subCommands().length == 0) {
+                runCommand(command, argumentList, optionMap);
+            } else {
+                runCompositeCommand(command, argumentList, optionMap);
+            }
         } catch (ValueParseException e) {
             System.err.println(HelpGenerator.generateHelp(command, e.getMessage()));
         }
     }
 
-    private static boolean isLastArgument(List<Field> declaredArgumentList, int i) {
-        return i == declaredArgumentList.size() - 1;
+    private static void runCommand(Object command, List<String> argumentList, Map<String, String> optionMap) {
+        handleOptions(command, optionMap);
+        handleArguments(command, argumentList);
+        CommandRunner.runCommand(command);
+    }
+
+    public static String getCommandName(Class aClass) {
+        return AnnotationHelper.getCommandAnnotation(aClass).name();
+    }
+
+    public static Class getCommandClass(Class aClass) {
+        return aClass;
+    }
+
+    private static void runCompositeCommand(Object command, List<String> argumentList, Map<String, String> optionMap) {
+        handleOptions(command, optionMap);
+        Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
+        Map<String, Class> subCommandMap = Arrays.stream(commandAnnotation.subCommands())
+                .collect(Collectors.toMap(ProgramRunner::getCommandName, ProgramRunner::getCommandClass));
+        String subCommandArgument = argumentList.remove(0);
+        Class subCommandClass = subCommandMap.get(subCommandArgument);
+        if (subCommandClass == null) {
+            throw new ValueParseException("Not a subcommand: " + subCommandArgument + " allowed are " + subCommandMap.entrySet());
+        } else {
+            try {
+                Object subCommand = subCommandClass.newInstance();
+                run(subCommand, argumentList, optionMap);
+            } catch (InstantiationException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     private static void setFieldValue(Object command, Field field, Object parsedValue) {
@@ -36,7 +72,7 @@ public class ProgramRunner {
     }
 
     private static Optional<String> getOptionValue(Map<String, String> optionMap, Field field) {
-        Cli.Option optionAnnotation = field.getAnnotation(Cli.Option.class);
+        Cli.Option optionAnnotation = AnnotationHelper.getOptionAnnotation(field);
         String name = FieldsProvider.getName(field, optionAnnotation.name());
         Optional<String> valueFromCommandLine = Stream.of(
                 "--" + name,
@@ -53,18 +89,16 @@ public class ProgramRunner {
         }
     }
 
-    private static void parseArguments(String[] arguments, Object command) {
-        List<String> argumentList = Arrays.stream(arguments)
+    private static List<String> getArgumentList(String[] arguments) {
+        return Arrays.stream(arguments)
                 .filter(s -> !s.startsWith("-"))
                 .collect(Collectors.toList());
-        handleArguments(command, argumentList);
     }
 
-    private static void parseOptions(String[] arguments, Object command) {
-        Map<String, String> optionMap = Arrays.stream(arguments)
+    private static Map<String, String> getOptionMap(String[] arguments) {
+        return Arrays.stream(arguments)
                 .filter(s -> s.startsWith("-"))
                 .collect(Collectors.toMap(ActualOptionParser::optionKey, ActualOptionParser::optionValue));
-        handleOptions(command, optionMap);
     }
 
     private static void handleArguments(Object command, List<String> argumentList) {
@@ -72,7 +106,7 @@ public class ProgramRunner {
         List<Field> declaredArgumentList = FieldsProvider.getArgumentList(commandClass);
         for (int i = 0; i < declaredArgumentList.size(); i++) {
             Field field = declaredArgumentList.get(i);
-            Cli.Argument argumentAnnotation = field.getAnnotation(Cli.Argument.class);
+            Cli.Argument argumentAnnotation = AnnotationHelper.getArgumentAnnotation(field);
             if (isLastArgument(declaredArgumentList, i)
                     && ArgumentParserMatcher.argumentParserDoesNotMatchFieldType(field, argumentAnnotation)) {
                 List<Object> value = argumentList.stream()
@@ -91,11 +125,15 @@ public class ProgramRunner {
         }
     }
 
+    private static boolean isLastArgument(List<Field> declaredArgumentList, int i) {
+        return i == declaredArgumentList.size() - 1;
+    }
+
     private static void handleOptions(Object command, Map<String, String> optionMap) {
         Class<?> commandClass = command.getClass();
         FieldsProvider.getOptionStream(commandClass)
                 .forEach((field) -> {
-                    Cli.Option optionAnnotation = field.getAnnotation(Cli.Option.class);
+                    Cli.Option optionAnnotation = AnnotationHelper.getOptionAnnotation(field);
                     Optional<String> value = getOptionValue(optionMap, field);
                     if (value.isPresent()) {
                         Object parsedValue = parseValue(field, value.get(), optionAnnotation.parser(), optionAnnotation.values());

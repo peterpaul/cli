@@ -8,4 +8,10 @@ public class HelpGeneratorTest {
         String helpText = HelpGenerator.generateHelp(new TestCommand());
         System.out.println(helpText);
     }
+
+    @Test
+    public void testComposite() {
+        String helpText = HelpGenerator.generateHelp(new TestCompositeCommand());
+        System.out.println(helpText);
+    }
 }

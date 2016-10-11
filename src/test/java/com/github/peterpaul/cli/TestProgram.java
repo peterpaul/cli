@@ -5,7 +5,11 @@ import org.junit.Test;
 public class TestProgram {
     @Test
     public void runTestCommand() {
-        ProgramRunner programRunner = new ProgramRunner();
-        programRunner.run(new String[]{"1", "2", "test.txt", "--verbose", "--url=http://nu.nl", "fiets", "race"}, new TestCommand());
+        ProgramRunner.run(new TestCommand(), new String[]{"1", "2", "test.txt", "--verbose", "--url=http://nu.nl", "fiets", "race"});
+    }
+
+    @Test
+    public void runTestCompositeCommand() {
+        ProgramRunner.run(new TestCompositeCommand(), new String[]{"test", "1", "2", "test.txt", "--verbose", "--url=http://nu.nl", "fiets", "race"});
     }
 }

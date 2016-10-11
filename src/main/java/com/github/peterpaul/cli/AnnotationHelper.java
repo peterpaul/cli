@@ -1,5 +1,6 @@
 package com.github.peterpaul.cli;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
@@ -23,5 +24,21 @@ public class AnnotationHelper {
         return valueStream.isPresent()
                 ? valueStream.get().filter(v -> v.equals(value)).findFirst()
                 : Optional.of(value);
+    }
+
+    public static Cli.Command getCommandAnnotation(Object command) {
+        return getCommandAnnotation(command.getClass());
+    }
+
+    public static Cli.Command getCommandAnnotation(Class<?> aClass) {
+        return aClass.getAnnotation(Cli.Command.class);
+    }
+
+    public static Cli.Option getOptionAnnotation(Field field) {
+        return field.getAnnotation(Cli.Option.class);
+    }
+
+    public static Cli.Argument getArgumentAnnotation(Field field) {
+        return field.getAnnotation(Cli.Argument.class);
     }
 }
