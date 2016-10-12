@@ -1,4 +1,4 @@
-package com.github.peterpaul.cli;
+package com.github.peterpaul.cli.exceptions;
 
 public class ValueParseException extends RuntimeException {
     public ValueParseException(Throwable cause) {

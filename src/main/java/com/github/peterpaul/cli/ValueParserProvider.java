@@ -1,5 +1,6 @@
 package com.github.peterpaul.cli;
 
+import com.github.peterpaul.cli.exceptions.ValueParseException;
 import com.github.peterpaul.cli.fn.Pair;
 import com.github.peterpaul.cli.parser.*;
 
@@ -8,6 +9,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static com.github.peterpaul.cli.instantiator.InstantiatorSupplier.INSTANTIATOR_SUPPLIER;
 
 public class ValueParserProvider {
     private static final Map<Class, ValueParser> valueParserMap;
@@ -26,11 +29,7 @@ public class ValueParserProvider {
     public static ValueParser getValueParser(Field field, Class<? extends ValueParser> parserClass) {
         ValueParser valueParser;
         if (parserClass != ValueParser.class) {
-            try {
-                valueParser = parserClass.newInstance();
-            } catch (InstantiationException | IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
+            valueParser = INSTANTIATOR_SUPPLIER.supply().instantiate(parserClass);
         } else {
             valueParser = valueParserMap.get(field.getType());
             if (valueParser == null) {

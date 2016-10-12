@@ -1,6 +1,6 @@
 package com.github.peterpaul.cli.parser;
 
-import com.github.peterpaul.cli.ValueParseException;
+import com.github.peterpaul.cli.exceptions.ValueParseException;
 
 import java.net.MalformedURLException;
 import java.net.URL;

@@ -1,4 +1,4 @@
-package com.github.peterpaul.cli.collection;
+package com.github.peterpaul.cli.exceptions;
 
 public class TooManyElementException extends RuntimeException {
 }

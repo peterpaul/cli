@@ -1,9 +1,12 @@
 package com.github.peterpaul.cli.collection;
 
+import com.github.peterpaul.cli.exceptions.NoElementsException;
+import com.github.peterpaul.cli.exceptions.TooManyElementException;
+
 import java.util.Collection;
 import java.util.Optional;
 
-public class ListUtil {
+public class CollectionUtil {
     public static <T> T getUnique(Collection<T> list) {
         if (list.isEmpty()) {
             throw new NoElementsException();

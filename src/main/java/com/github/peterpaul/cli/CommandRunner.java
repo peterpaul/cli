@@ -1,7 +1,8 @@
 package com.github.peterpaul.cli;
 
-import com.github.peterpaul.cli.collection.ListUtil;
-import com.github.peterpaul.cli.collection.TooManyElementException;
+import com.github.peterpaul.cli.collection.CollectionUtil;
+import com.github.peterpaul.cli.exceptions.IllegalRunMethodException;
+import com.github.peterpaul.cli.exceptions.TooManyElementException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -52,7 +53,7 @@ public class CommandRunner {
                 .filter(m -> m.isAnnotationPresent(Cli.Run.class))
                 .collect(Collectors.toList());
         try {
-            return ListUtil.tryGetUnique(annotatedRunMethods);
+            return CollectionUtil.tryGetUnique(annotatedRunMethods);
         } catch (TooManyElementException e) {
             throw new IllegalRunMethodException("Only one method may be annotated with " + Cli.Run.class.getCanonicalName(),
                     e);
