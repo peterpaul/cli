@@ -16,24 +16,30 @@ public class OutputHelper {
     }
 
     public static Pair<String, String> renderNextLine(int indentation, String content, SectionConfiguration sectionConfiguration) {
-        Optional<Integer> lastWordPosition = Optional.empty();
-        int currentPosition;
-        if (content.length() <= sectionConfiguration.getLineWidth() - indentation) {
-            lastWordPosition = Optional.of(content.length());
-        } else {
-            for (currentPosition = 0; currentPosition < sectionConfiguration.getLineWidth() - indentation; currentPosition++) {
-                if (Character.isWhitespace(content.charAt(currentPosition))) {
-                    lastWordPosition = Optional.of(currentPosition);
-                }
-            }
-        }
-        int splitPosition = lastWordPosition.orElse(getFirstWhitespacePosition(content));
+        int splitPosition = getSplitPosition(indentation, content, sectionConfiguration);
         if (splitPosition < 0) {
             return Pair.of(spaces(indentation) + content, "");
         } else {
             return Pair.of(spaces(indentation) + content.substring(0, splitPosition),
                     content.substring(splitPosition, content.length()).trim());
         }
+    }
+
+    private static int getSplitPosition(int indentation, String content, SectionConfiguration sectionConfiguration) {
+        Optional<Integer> lastWordPosition = Optional.empty();
+        int currentPosition;
+        for (currentPosition = 0; currentPosition < Integer.min(content.length(), sectionConfiguration.getLineWidth() - indentation); currentPosition++) {
+            if (Character.isWhitespace(content.charAt(currentPosition))) {
+                lastWordPosition = Optional.of(currentPosition);
+            }
+            if (content.charAt(currentPosition) == '\n') {
+                break;
+            }
+        }
+        if (currentPosition == content.length()) {
+            lastWordPosition = Optional.of(currentPosition);
+        }
+        return lastWordPosition.orElse(getFirstWhitespacePosition(content));
     }
 
     public static int getFirstWhitespacePosition(String content) {
