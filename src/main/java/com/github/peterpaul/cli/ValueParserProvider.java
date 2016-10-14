@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-import static com.github.peterpaul.cli.instantiator.InstantiatorSupplier.INSTANTIATOR_SUPPLIER;
+import static com.github.peterpaul.cli.instantiator.InstantiatorSupplier.instantiate;
 
 public class ValueParserProvider {
     private static final Supplier<Map<Class, ValueParser>> VALUE_PARSER_MAP_SUPPLIER = ((Supplier<Map<Class, ValueParser>>) () -> ServiceLoaderStreamer.stream(ValueParser.class)
@@ -26,7 +26,7 @@ public class ValueParserProvider {
     public static ValueParser getValueParser(Field field, Class<? extends ValueParser> parserClass) {
         ValueParser valueParser;
         if (parserClass != ValueParser.class) {
-            valueParser = INSTANTIATOR_SUPPLIER.supply().instantiate(parserClass);
+            valueParser = instantiate(parserClass);
         } else {
             valueParser = VALUE_PARSER_MAP_SUPPLIER.supply().get(field.getType());
             if (valueParser == null) {

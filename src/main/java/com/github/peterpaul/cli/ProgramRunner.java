@@ -12,7 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.github.peterpaul.cli.instantiator.InstantiatorSupplier.INSTANTIATOR_SUPPLIER;
+import static com.github.peterpaul.cli.instantiator.InstantiatorSupplier.instantiate;
 
 public class ProgramRunner {
     public static void run(Object command, String[] arguments) {
@@ -56,7 +56,7 @@ public class ProgramRunner {
         if (subCommandClass == null) {
             throw new ValueParseException("Not a subcommand: " + subCommandArgument + " allowed are " + subCommandMap.entrySet());
         } else {
-            Object subCommand = INSTANTIATOR_SUPPLIER.supply().instantiate(subCommandClass);
+            Object subCommand = instantiate(subCommandClass);
             run(subCommand, argumentList, optionMap);
         }
     }
