@@ -45,6 +45,11 @@ public class OutputHelperTest {
     }
 
     @Test
+    public void renderNextLineWithTab() {
+        assertThat(renderNextLine(5, "aaaa\taa\taa\taa", SECTION_CONFIGURATION), is(equalTo(Pair.of("     aaaa\taa", "aa\taa"))));
+    }
+
+    @Test
     public void formatWithoutNewLine() {
         assertThat(format(A_STRING_WITHOUT_A_NEWLINE, SECTION_CONFIGURATION), is(equalTo(spaces(FIRST_LINE_INDENTATION) + A_STRING + "\n" + spaces(INDENTATION) + WITHOUT_A + "\n" + spaces(INDENTATION) + NEWLINE)));
     }

@@ -27,17 +27,21 @@ public class OutputHelper {
 
     private static int getSplitPosition(int indentation, String content, SectionConfiguration sectionConfiguration) {
         Optional<Integer> lastWordPosition = Optional.empty();
+        int currentIndex;
         int currentPosition;
-        for (currentPosition = 0; currentPosition < Integer.min(content.length(), sectionConfiguration.getLineWidth() - indentation); currentPosition++) {
-            if (Character.isWhitespace(content.charAt(currentPosition))) {
-                lastWordPosition = Optional.of(currentPosition);
-            }
-            if (content.charAt(currentPosition) == '\n') {
-                break;
+        for (currentPosition = indentation, currentIndex = 0; currentPosition < sectionConfiguration.getLineWidth() && currentIndex < content.length(); currentIndex++, currentPosition++) {
+            char currentChar = content.charAt(currentIndex);
+            if (Character.isWhitespace(currentChar)) {
+                lastWordPosition = Optional.of(currentIndex);
+                if (currentChar == '\n') {
+                    break;
+                } else if (currentChar == '\t') {
+                    currentPosition = (currentPosition / 8 + 1) * 8;
+                }
             }
         }
-        if (currentPosition == content.length()) {
-            lastWordPosition = Optional.of(currentPosition);
+        if (currentIndex == content.length()) {
+            lastWordPosition = Optional.of(currentIndex);
         }
         return lastWordPosition.orElse(getFirstWhitespacePosition(content));
     }
