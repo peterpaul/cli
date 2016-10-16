@@ -1,7 +1,10 @@
 package com.github.peterpaul.cli;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public class HelpGenerator {
     private static final ImmutableSectionConfiguration TOP_LEVEL_SECTION = ImmutableSectionConfiguration.builder()
@@ -70,18 +73,33 @@ public class HelpGenerator {
         return FieldsProvider.getOptionStream(command.getClass())
                 .map(optionField -> {
                     Cli.Option annotation = AnnotationHelper.getOptionAnnotation(optionField);
-                    String shortOptionString = Objects.equals(annotation.shortName(),
-                            '\0')
+                    String shortOptionString = Objects.equals(annotation.shortName(), '\0')
                             ? ""
                             : "-" + annotation.shortName() + ",";
                     String optionNameString = "--" + FieldsProvider.getName(optionField, annotation.name());
                     String defaultValueString = AnnotationHelper.fromEmpty(annotation.defaultValue()).map(defaultValue -> "default: '" + defaultValue + "'").orElse("");
-                    String valuesString = AnnotationHelper.valueStream(annotation.values()).map(v -> "('" + v.reduce((s, t) -> s + "', '" + t).get() + "') ").orElse("");
-                    return OutputHelper.format(OutputHelper.ofSize(shortOptionString + optionNameString, 12) + valuesString + defaultValueString,
+                    String valuesString = getValueString(optionField);
+                    String optionString = OutputHelper.ofSize(shortOptionString + optionNameString + "=" + optionField.getType().getSimpleName(), 12);
+                    return OutputHelper.format(optionString + valuesString + defaultValueString,
                             ARGUMENT_LEVEL_SECTION) + '\n' +
                             OutputHelper.format(annotation.description(), OPTION_LEVEL_SECTION);
                 })
-                .reduce("OPTIONS:", (state, opt) -> (state + "\n" + opt));
+                .reduce("OPTION:", (state, opt) -> (state + "\n" + opt));
+    }
+
+    private static String getValueString(Field optionField) {
+        Cli.Option annotation = AnnotationHelper.getOptionAnnotation(optionField);
+        Optional<Stream<String>> stringStream;
+        if (isBoolean(optionField) && annotation.values().length == 0) {
+            stringStream = Optional.of(Arrays.stream(new String[]{"true", "false"}));
+        } else {
+            stringStream = AnnotationHelper.valueStream(annotation.values());
+        }
+        return stringStream.map(v -> "('" + v.reduce((s, t) -> s + "', '" + t).get() + "') ").orElse("");
+    }
+
+    private static boolean isBoolean(Field optionField) {
+        return optionField.getType() == Boolean.class || optionField.getType() == boolean.class;
     }
 
     private static String getNameAndDescription(Cli.Command commandAnnotation) {
