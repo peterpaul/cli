@@ -12,6 +12,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.github.peterpaul.cli.fn.Function.mapper;
 import static com.github.peterpaul.cli.instantiator.InstantiatorSupplier.instantiate;
 
 public class ProgramRunner {
@@ -19,7 +20,7 @@ public class ProgramRunner {
         run(command, getArgumentList(arguments), getOptionMap(arguments));
     }
 
-    public static void run(Object command, List<String> argumentList, Map<String, String> optionMap) {
+    public static Boolean run(Object command, List<String> argumentList, Map<String, String> optionMap) {
         try {
             Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
             if (commandAnnotation.subCommands().length == 0) {
@@ -27,8 +28,10 @@ public class ProgramRunner {
             } else {
                 runCompositeCommand(command, argumentList, optionMap);
             }
+            return true;
         } catch (ValueParseException e) {
             System.err.println(HelpGenerator.generateHelp(command, e.getMessage()));
+            return false;
         }
     }
 
@@ -49,16 +52,31 @@ public class ProgramRunner {
     private static void runCompositeCommand(Object command, List<String> argumentList, Map<String, String> optionMap) {
         handleOptions(command, optionMap);
         Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
+        com.github.peterpaul.cli.fn.Function<String, Optional<Class>> subCommandMapper = getSubCommandMapper(commandAnnotation);
+        String subCommandArgument = argumentList.remove(0);
+        subCommandMapper.apply(subCommandArgument)
+                .map(c -> instantiate(c))
+                .map(c -> run(c, argumentList, optionMap))
+                .orElseGet(() -> {
+                    if (subCommandArgument.equals("help")) {
+                        Object helpCommand = argumentList
+                                .stream()
+                                .findFirst()
+                                .flatMap((arg) -> subCommandMapper.apply(arg).map(c -> instantiate(c)))
+                                .orElseGet(() -> command);
+                        System.out.println(HelpGenerator.generateHelp(helpCommand));
+                    } else {
+                        String subCommandsString = Arrays.stream(commandAnnotation.subCommands()).map(ProgramRunner::getCommandName).reduce((s, t) -> s + ", " + t).orElse("");
+                        throw new ValueParseException("Not a subcommand: '" + subCommandArgument + "', allowed are [" + subCommandsString + ']');
+                    }
+                    return true;
+                });
+    }
+
+    private static com.github.peterpaul.cli.fn.Function<String, Optional<Class>> getSubCommandMapper(Cli.Command commandAnnotation) {
         Map<String, Class> subCommandMap = Arrays.stream(commandAnnotation.subCommands())
                 .collect(Collectors.toMap(ProgramRunner::getCommandName, ProgramRunner::getCommandClass));
-        String subCommandArgument = argumentList.remove(0);
-        Class subCommandClass = subCommandMap.get(subCommandArgument);
-        if (subCommandClass == null) {
-            throw new ValueParseException("Not a subcommand: " + subCommandArgument + " allowed are " + subCommandMap.entrySet());
-        } else {
-            Object subCommand = instantiate(subCommandClass);
-            run(subCommand, argumentList, optionMap);
-        }
+        return mapper(subCommandMap);
     }
 
     private static void setFieldValue(Object command, Field field, Object parsedValue) {
