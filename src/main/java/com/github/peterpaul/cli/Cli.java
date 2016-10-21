@@ -20,6 +20,8 @@ public @interface Cli {
         String description();
 
         Class[] subCommands() default {};
+
+        String resourceBundle() default "";
     }
 
     @Target({FIELD})

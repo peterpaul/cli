@@ -1,9 +1,9 @@
 package com.github.peterpaul.cli;
 
+import com.github.peterpaul.cli.locale.Bundle;
+
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class AnnotationHelper {
@@ -40,5 +40,10 @@ public class AnnotationHelper {
 
     public static Cli.Argument getArgumentAnnotation(Field field) {
         return field.getAnnotation(Cli.Argument.class);
+    }
+
+    public static Bundle getResourceBundle(Cli.Command commandAnnotation) {
+        return new Bundle(fromEmpty(commandAnnotation.resourceBundle())
+                .map(r -> ResourceBundle.getBundle(r, Locale.getDefault())));
     }
 }

@@ -1,6 +1,7 @@
 package com.github.peterpaul.cli;
 
 import com.github.peterpaul.cli.exceptions.ValueParseException;
+import com.github.peterpaul.cli.instantiator.InstantiatorSupplier;
 import com.github.peterpaul.cli.parser.ValueParser;
 
 import java.lang.reflect.Field;
@@ -13,7 +14,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.github.peterpaul.cli.fn.Function.mapper;
-import static com.github.peterpaul.cli.instantiator.InstantiatorSupplier.instantiate;
 
 public class ProgramRunner {
     public static void run(Object command, String[] arguments) {
@@ -55,14 +55,14 @@ public class ProgramRunner {
         com.github.peterpaul.cli.fn.Function<String, Optional<Class>> subCommandMapper = getSubCommandMapper(commandAnnotation);
         String subCommandArgument = argumentList.remove(0);
         subCommandMapper.apply(subCommandArgument)
-                .map(c -> instantiate(c))
+                .map((Function<Class, Object>) InstantiatorSupplier::instantiate)
                 .map(c -> run(c, argumentList, optionMap))
                 .orElseGet(() -> {
                     if (subCommandArgument.equals("help")) {
                         Object helpCommand = argumentList
                                 .stream()
                                 .findFirst()
-                                .flatMap((arg) -> subCommandMapper.apply(arg).map(c -> instantiate(c)))
+                                .flatMap(arg -> subCommandMapper.apply(arg).map(InstantiatorSupplier::instantiate))
                                 .orElseGet(() -> command);
                         System.out.println(HelpGenerator.generateHelp(helpCommand));
                     } else {

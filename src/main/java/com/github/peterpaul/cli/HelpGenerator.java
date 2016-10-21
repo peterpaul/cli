@@ -1,5 +1,7 @@
 package com.github.peterpaul.cli;
 
+import com.github.peterpaul.cli.locale.Bundle;
+
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Objects;
@@ -21,25 +23,26 @@ public class HelpGenerator {
 
     public static String generateHelp(Object command) {
         Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
+        Bundle bundle = AnnotationHelper.getResourceBundle(commandAnnotation);
         if (commandAnnotation.subCommands().length == 0) {
-            return getNameAndDescription(commandAnnotation) + "\n\n"
+            return getNameAndDescription(commandAnnotation, bundle) + "\n\n"
                     + getUsage(command) + "\n"
-                    + getArgumentHelp(command) + "\n"
-                    + getOptionHelp(command)
+                    + getArgumentHelp(command, bundle) + "\n"
+                    + getOptionHelp(command, bundle)
                     ;
         } else {
-            return getNameAndDescription(commandAnnotation) + "\n\n"
+            return getNameAndDescription(commandAnnotation, bundle) + "\n\n"
                     + OutputHelper.format("USAGE: " + commandAnnotation.name() + " [OPTION...] COMMAND", TOP_LEVEL_SECTION) + "\n"
-                    + getSubCommands(commandAnnotation) + "\n"
-                    + getOptionHelp(commandAnnotation)
+                    + getSubCommands(commandAnnotation, bundle) + "\n"
+                    + getOptionHelp(commandAnnotation, bundle)
                     ;
         }
     }
 
-    private static String getSubCommands(Cli.Command commandAnnotation) {
+    private static String getSubCommands(Cli.Command commandAnnotation, Bundle bundle) {
         return Arrays.stream(commandAnnotation.subCommands())
                 .map(AnnotationHelper::getCommandAnnotation)
-                .map(c -> OutputHelper.format(OutputHelper.ofSize(c.name(), 12) + c.description(), ARGUMENT_LEVEL_SECTION))
+                .map(c -> OutputHelper.format(OutputHelper.ofSize(c.name(), 12) + bundle.apply(c.description()), ARGUMENT_LEVEL_SECTION))
                 .reduce("COMMAND:", (s, t) -> s + "\n" + t);
     }
 
@@ -58,31 +61,31 @@ public class HelpGenerator {
                 TOP_LEVEL_SECTION);
     }
 
-    private static String getArgumentHelp(Object command) {
+    private static String getArgumentHelp(Object command, Bundle bundle) {
         return FieldsProvider.getArgumentStream(command.getClass())
-                .map(argumentField -> {
-                    Cli.Argument argumentFieldAnnotation = AnnotationHelper.getArgumentAnnotation(argumentField);
-                    return OutputHelper.ofSize(FieldsProvider.getName(argumentField, argumentFieldAnnotation.name()) + ":",
-                            12) + argumentFieldAnnotation.description();
+                .map(arg -> {
+                    Cli.Argument argumentAnnotation = AnnotationHelper.getArgumentAnnotation(arg);
+                    return OutputHelper.ofSize(FieldsProvider.getName(arg, argumentAnnotation.name()) + ":",
+                            12) + bundle.apply(argumentAnnotation.description());
                 })
                 .map(argument -> OutputHelper.format(argument, ARGUMENT_LEVEL_SECTION))
                 .reduce("WHERE:", (state, arg) -> (state + "\n" + arg));
     }
 
-    private static String getOptionHelp(Object command) {
+    private static String getOptionHelp(Object command, Bundle bundle) {
         return FieldsProvider.getOptionStream(command.getClass())
-                .map(optionField -> {
-                    Cli.Option annotation = AnnotationHelper.getOptionAnnotation(optionField);
-                    String shortOptionString = Objects.equals(annotation.shortName(), '\0')
+                .map(option -> {
+                    Cli.Option optionAnnotation = AnnotationHelper.getOptionAnnotation(option);
+                    String shortOptionString = Objects.equals(optionAnnotation.shortName(), '\0')
                             ? ""
-                            : "-" + annotation.shortName() + ",";
-                    String optionNameString = "--" + FieldsProvider.getName(optionField, annotation.name());
-                    String defaultValueString = AnnotationHelper.fromEmpty(annotation.defaultValue()).map(defaultValue -> "default: '" + defaultValue + "'").orElse("");
-                    String valuesString = getValueString(optionField);
-                    String optionString = OutputHelper.ofSize(shortOptionString + optionNameString + "=" + optionField.getType().getSimpleName(), 12);
+                            : "-" + optionAnnotation.shortName() + ",";
+                    String optionNameString = "--" + FieldsProvider.getName(option, optionAnnotation.name());
+                    String defaultValueString = AnnotationHelper.fromEmpty(optionAnnotation.defaultValue()).map(defaultValue -> "default: '" + defaultValue + "'").orElse("");
+                    String valuesString = getValueString(option);
+                    String optionString = OutputHelper.ofSize(shortOptionString + optionNameString + "=" + option.getType().getSimpleName(), 12);
                     return OutputHelper.format(optionString + valuesString + defaultValueString,
                             ARGUMENT_LEVEL_SECTION) + '\n' +
-                            OutputHelper.format(annotation.description(), OPTION_LEVEL_SECTION);
+                            OutputHelper.format(bundle.apply(optionAnnotation.description()), OPTION_LEVEL_SECTION);
                 })
                 .reduce("OPTION:", (state, opt) -> (state + "\n" + opt));
     }
@@ -102,7 +105,7 @@ public class HelpGenerator {
         return optionField.getType() == Boolean.class || optionField.getType() == boolean.class;
     }
 
-    private static String getNameAndDescription(Cli.Command commandAnnotation) {
-        return OutputHelper.format(commandAnnotation.name() + " - " + commandAnnotation.description(), TOP_LEVEL_SECTION);
+    private static String getNameAndDescription(Cli.Command commandAnnotation, Bundle bundle) {
+        return OutputHelper.format(commandAnnotation.name() + " - " + bundle.apply(commandAnnotation.description()), TOP_LEVEL_SECTION);
     }
 }
