@@ -2,7 +2,7 @@ plugins {
     id "net.ltgt.apt" version "0.9"
 }
 
-group 'tk.kleinhaneveld.cli'
+group 'com.github.peterpaul'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
@@ -11,6 +11,7 @@ apply plugin: 'idea'
 sourceCompatibility = 1.8
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -22,4 +23,10 @@ dependencies {
 
     compileOnly "org.immutables:value:2.3.2:annotations"
     apt         "org.immutables:value:2.3.2"
+}
+
+uploadArchives {
+    repositories {
+        mavenLocal()
+    }
 }
