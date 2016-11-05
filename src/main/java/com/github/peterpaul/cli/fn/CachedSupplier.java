@@ -1,5 +1,7 @@
 package com.github.peterpaul.cli.fn;
 
+import java.util.function.Supplier;
+
 public class CachedSupplier<T> implements Supplier<T>, Registerable {
     private final Supplier<T> delegate;
     private final Broadcaster broadcaster = new Broadcaster();

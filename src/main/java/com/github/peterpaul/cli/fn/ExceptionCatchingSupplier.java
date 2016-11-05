@@ -1,6 +1,7 @@
 package com.github.peterpaul.cli.fn;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class ExceptionCatchingSupplier<T> implements Supplier<Optional<T>> {
     private final Supplier<T> supplier;

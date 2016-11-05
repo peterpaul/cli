@@ -1,11 +1,12 @@
 package com.github.peterpaul.cli.instantiator;
 
-import com.github.peterpaul.cli.fn.Supplier;
+import java.util.function.Supplier;
 
 import static com.github.peterpaul.cli.collection.ServiceLoaderStreamer.loadUniqueInstance;
+import static com.github.peterpaul.cli.fn.Suppliers.cached;
 
 public class InstantiatorSupplier implements Supplier<Instantiator> {
-    private static final Supplier<Instantiator> INSTANTIATOR_SUPPLIER = new InstantiatorSupplier().cache();
+    private static final Supplier<Instantiator> INSTANTIATOR_SUPPLIER = cached(new InstantiatorSupplier());
 
     private InstantiatorSupplier() {
     }
