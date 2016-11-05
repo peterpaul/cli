@@ -9,7 +9,7 @@ public class ByServiceLoaderOrNewClassInstanceInstantiator implements Instantiat
     @Override
     public <T> T instantiate(Class<T> aClass) {
         return catchingFor(() -> serviceLoaderInstantiator.instantiate(aClass))
-                .supply()
+                .get()
                 .orElseGet(() -> classInstantiator.instantiate(aClass));
     }
 }

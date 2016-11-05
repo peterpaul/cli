@@ -11,11 +11,11 @@ public class InstantiatorSupplier implements Supplier<Instantiator> {
     }
 
     public static <T> T instantiate(Class<T> aClass) {
-        return INSTANTIATOR_SUPPLIER.supply().instantiate(aClass);
+        return INSTANTIATOR_SUPPLIER.get().instantiate(aClass);
     }
 
     @Override
-    public Instantiator supply() {
+    public Instantiator get() {
         return loadUniqueInstance(Instantiator.class);
     }
 }

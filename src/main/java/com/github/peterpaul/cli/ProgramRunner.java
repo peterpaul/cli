@@ -13,7 +13,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.github.peterpaul.cli.fn.Function.mapper;
+import static com.github.peterpaul.cli.fn.MapperFunction.mapper;
 
 public class ProgramRunner {
     public static void run(Object command, String[] arguments) {
@@ -52,7 +52,7 @@ public class ProgramRunner {
     private static void runCompositeCommand(Object command, List<String> argumentList, Map<String, String> optionMap) {
         handleOptions(command, optionMap);
         Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
-        com.github.peterpaul.cli.fn.Function<String, Optional<Class>> subCommandMapper = getSubCommandMapper(commandAnnotation);
+        Function<String, Optional<Class>> subCommandMapper = getSubCommandMapper(commandAnnotation);
         String subCommandArgument = argumentList.remove(0);
         subCommandMapper.apply(subCommandArgument)
                 .map((Function<Class, Object>) InstantiatorSupplier::instantiate)
@@ -73,7 +73,7 @@ public class ProgramRunner {
                 });
     }
 
-    private static com.github.peterpaul.cli.fn.Function<String, Optional<Class>> getSubCommandMapper(Cli.Command commandAnnotation) {
+    private static Function<String, Optional<Class>> getSubCommandMapper(Cli.Command commandAnnotation) {
         Map<String, Class> subCommandMap = Arrays.stream(commandAnnotation.subCommands())
                 .collect(Collectors.toMap(ProgramRunner::getCommandName, ProgramRunner::getCommandClass));
         return mapper(subCommandMap);

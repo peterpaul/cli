@@ -10,13 +10,13 @@ public class CachedSupplier<T> implements Supplier<T>, Registerable {
     }
 
     @Override
-    public T supply() {
+    public T get() {
         T result = value;
         if (result == null) {
             synchronized (this) {
                 result = value;
                 if (result == null) {
-                    value = result = delegate.supply();
+                    value = result = delegate.get();
                 }
             }
         }

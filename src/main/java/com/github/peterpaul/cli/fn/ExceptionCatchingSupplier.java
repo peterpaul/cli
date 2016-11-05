@@ -14,9 +14,9 @@ public class ExceptionCatchingSupplier<T> implements Supplier<Optional<T>> {
     }
 
     @Override
-    public Optional<T> supply() {
+    public Optional<T> get() {
         try {
-            return Optional.of(supplier.supply());
+            return Optional.of(supplier.get());
         } catch (RuntimeException e) {
             return Optional.empty();
         }

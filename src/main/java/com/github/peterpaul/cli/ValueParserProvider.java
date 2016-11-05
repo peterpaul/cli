@@ -28,7 +28,7 @@ public class ValueParserProvider {
         if (parserClass != ValueParser.class) {
             valueParser = instantiate(parserClass);
         } else {
-            valueParser = VALUE_PARSER_MAP_SUPPLIER.supply().get(field.getType());
+            valueParser = VALUE_PARSER_MAP_SUPPLIER.get().get(field.getType());
             if (valueParser == null) {
                 throw new ValueParseException("No ValueParser registered for: '" + field.getDeclaringClass().getCanonicalName() + "::" + field.getName() + ": " + field.getType().getCanonicalName() + "', please specify one using the 'parser' attribute of the Cli annnotation.");
             }
