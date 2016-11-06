@@ -1,6 +1,6 @@
 package com.github.peterpaul.cli;
 
-import com.github.peterpaul.cli.fn.Pair;
+import com.github.peterpaul.fn.Pair;
 import org.junit.Test;
 
 import static com.github.peterpaul.cli.OutputHelper.*;
@@ -36,17 +36,17 @@ public class OutputHelperTest {
 
     @Test
     public void renderNextLineHandlerNewLine() {
-        assertThat(renderNextLine(0, A_STRING_WITH_A_NEWLINE, SECTION_CONFIGURATION), is(equalTo(Pair.of(A_STRING, WITH_A_NEWLINE))));
+        assertThat(renderNextLine(0, A_STRING_WITH_A_NEWLINE, SECTION_CONFIGURATION), is(equalTo(Pair.pair(A_STRING, WITH_A_NEWLINE))));
     }
 
     @Test
     public void renderNextLineHandlerWithoutNewLine() {
-        assertThat(renderNextLine(0, A_STRING_WITHOUT_A_NEWLINE, SECTION_CONFIGURATION), is(equalTo(Pair.of(A_STRING_WITHOUT_A, NEWLINE))));
+        assertThat(renderNextLine(0, A_STRING_WITHOUT_A_NEWLINE, SECTION_CONFIGURATION), is(equalTo(Pair.pair(A_STRING_WITHOUT_A, NEWLINE))));
     }
 
     @Test
     public void renderNextLineWithTab() {
-        assertThat(renderNextLine(5, "aaaa\taa\taa\taa", SECTION_CONFIGURATION), is(equalTo(Pair.of("     aaaa\taa", "aa\taa"))));
+        assertThat(renderNextLine(5, "aaaa\taa\taa\taa", SECTION_CONFIGURATION), is(equalTo(Pair.pair("     aaaa\taa", "aa\taa"))));
     }
 
     @Test

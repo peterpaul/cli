@@ -1,12 +1,14 @@
 package com.github.peterpaul.cli;
 
 import com.github.peterpaul.cli.locale.Bundle;
+import com.github.peterpaul.fn.Function;
+import com.github.peterpaul.fn.Option;
+import com.github.peterpaul.fn.Stream;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Stream;
+
+import static com.github.peterpaul.fn.Reductions.join;
 
 public class HelpGenerator {
     private static final ImmutableSectionConfiguration TOP_LEVEL_SECTION = ImmutableSectionConfiguration.builder()
@@ -39,66 +41,103 @@ public class HelpGenerator {
         }
     }
 
-    private static String getSubCommands(Cli.Command commandAnnotation, Bundle bundle) {
-        return Arrays.stream(commandAnnotation.subCommands())
-                .map(AnnotationHelper::getCommandAnnotation)
-                .map(c -> OutputHelper.format(OutputHelper.ofSize(c.name(), 12) + bundle.apply(c.description()), ARGUMENT_LEVEL_SECTION))
-                .reduce("COMMAND:", (s, t) -> s + "\n" + t);
+    private static String getSubCommands(Cli.Command commandAnnotation, final Bundle bundle) {
+        return Stream.stream(commandAnnotation.subCommands())
+                .map(new Function<Class, Cli.Command>() {
+                    @Override
+                    public Cli.Command apply(Class aClass) {
+                        return AnnotationHelper.getCommandAnnotation(aClass);
+                    }
+                })
+                .map(new Function<Cli.Command, String>() {
+                    @Override
+                    public String apply(Cli.Command c) {
+                        return OutputHelper.format(OutputHelper.ofSize(c.name(), 12) + bundle.apply(c.description()), ARGUMENT_LEVEL_SECTION);
+                    }
+                })
+                .reduce("COMMAND:", join("\n"));
     }
 
     private static String getUsage(Object command) {
         Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
         return OutputHelper.format("USAGE: " + commandAnnotation.name() + " [OPTION...] " +
                         FieldsProvider.getArgumentStream(command.getClass())
-                                .map((arg) -> {
-                                    Cli.Argument argumentAnnotation = AnnotationHelper.getArgumentAnnotation(arg);
-                                    String nameString = FieldsProvider.getName(arg, argumentAnnotation.name());
-                                    return ArgumentParserMatcher.argumentParserDoesNotMatchFieldType(arg, argumentAnnotation)
-                                            ? "[" + nameString + "...]"
-                                            : nameString;
+                                .map(new Function<Field, String>() {
+                                    @Override
+                                    public String apply(Field arg) {
+                                        Cli.Argument argumentAnnotation = AnnotationHelper.getArgumentAnnotation(arg);
+                                        String nameString = FieldsProvider.getName(arg, argumentAnnotation.name());
+                                        return ArgumentParserMatcher.argumentParserDoesNotMatchFieldType(arg, argumentAnnotation)
+                                                ? "[" + nameString + "...]"
+                                                : nameString;
+                                    }
                                 })
-                                .reduce("", (state, argumentName) -> state + " " + argumentName),
+                                .reduce("", join(" ")),
                 TOP_LEVEL_SECTION);
     }
 
-    private static String getArgumentHelp(Object command, Bundle bundle) {
+    private static String getArgumentHelp(Object command, final Bundle bundle) {
         return FieldsProvider.getArgumentStream(command.getClass())
-                .map(arg -> {
-                    Cli.Argument argumentAnnotation = AnnotationHelper.getArgumentAnnotation(arg);
-                    return OutputHelper.ofSize(FieldsProvider.getName(arg, argumentAnnotation.name()) + ":",
-                            12) + bundle.apply(argumentAnnotation.description());
+                .map(new Function<Field, String>() {
+                    @Override
+                    public String apply(Field arg) {
+                        Cli.Argument argumentAnnotation = AnnotationHelper.getArgumentAnnotation(arg);
+                        return OutputHelper.ofSize(FieldsProvider.getName(arg, argumentAnnotation.name()) + ":",
+                                12) + bundle.apply(argumentAnnotation.description());
+                    }
                 })
-                .map(argument -> OutputHelper.format(argument, ARGUMENT_LEVEL_SECTION))
-                .reduce("WHERE:", (state, arg) -> (state + "\n" + arg));
+                .map(new Function<String, String>() {
+                    @Override
+                    public String apply(String s) {
+                        return OutputHelper.format(s, ARGUMENT_LEVEL_SECTION);
+                    }
+                })
+                .reduce("WHERE:", join("\n"));
     }
 
-    private static String getOptionHelp(Object command, Bundle bundle) {
+    private static String getOptionHelp(Object command, final Bundle bundle) {
         return FieldsProvider.getOptionStream(command.getClass())
-                .map(option -> {
-                    Cli.Option optionAnnotation = AnnotationHelper.getOptionAnnotation(option);
-                    String shortOptionString = Objects.equals(optionAnnotation.shortName(), '\0')
-                            ? ""
-                            : "-" + optionAnnotation.shortName() + ",";
-                    String optionNameString = "--" + FieldsProvider.getName(option, optionAnnotation.name());
-                    String defaultValueString = AnnotationHelper.fromEmpty(optionAnnotation.defaultValue()).map(defaultValue -> "default: '" + defaultValue + "'").orElse("");
-                    String valuesString = getValueString(option);
-                    String optionString = OutputHelper.ofSize(shortOptionString + optionNameString + "=" + option.getType().getSimpleName(), 12);
-                    return OutputHelper.format(optionString + valuesString + defaultValueString,
-                            ARGUMENT_LEVEL_SECTION) + '\n' +
-                            OutputHelper.format(bundle.apply(optionAnnotation.description()), OPTION_LEVEL_SECTION);
+                .map(new Function<Field, String>() {
+                    @Override
+                    public String apply(Field option) {
+                        Cli.Option optionAnnotation = AnnotationHelper.getOptionAnnotation(option);
+                        String shortOptionString = Objects.equals(optionAnnotation.shortName(), '\0')
+                                ? ""
+                                : "-" + optionAnnotation.shortName() + ",";
+                        String optionNameString = "--" + FieldsProvider.getName(option, optionAnnotation.name());
+                        String defaultValueString = AnnotationHelper
+                                .fromEmpty(optionAnnotation.defaultValue())
+                                .map(new Function<String, String>() {
+                                    @Override
+                                    public String apply(String defaultValue) {
+                                        return "default: '" + defaultValue + "'";
+                                    }
+                                })
+                                .or("");
+                        String valuesString = getValueString(option);
+                        String optionString = OutputHelper.ofSize(shortOptionString + optionNameString + "=" + option.getType().getSimpleName(), 12);
+                        return OutputHelper.format(optionString + valuesString + defaultValueString,
+                                ARGUMENT_LEVEL_SECTION) + '\n' +
+                                OutputHelper.format(bundle.apply(optionAnnotation.description()), OPTION_LEVEL_SECTION);
+                    }
                 })
-                .reduce("OPTION:", (state, opt) -> (state + "\n" + opt));
+                .reduce("OPTION:", join("\n"));
     }
 
     private static String getValueString(Field optionField) {
         Cli.Option annotation = AnnotationHelper.getOptionAnnotation(optionField);
-        Optional<Stream<String>> stringStream;
+        Option<Stream<String>> stringStream;
         if (isBoolean(optionField) && annotation.values().length == 0) {
-            stringStream = Optional.of(Arrays.stream(new String[]{"true", "false"}));
+            stringStream = Option.of(Stream.stream("true", "false"));
         } else {
             stringStream = AnnotationHelper.valueStream(annotation.values());
         }
-        return stringStream.map(v -> "('" + v.reduce((s, t) -> s + "', '" + t).get() + "') ").orElse("");
+        return stringStream.map(new Function<Stream<String>, String>() {
+            @Override
+            public String apply(Stream<String> v) {
+                return "('" + v.reduce(join("', '")).get() + "') ";
+            }
+        }).or("");
     }
 
     private static boolean isBoolean(Field optionField) {

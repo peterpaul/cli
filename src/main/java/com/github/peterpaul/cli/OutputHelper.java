@@ -1,10 +1,9 @@
 package com.github.peterpaul.cli;
 
-import com.github.peterpaul.cli.fn.Pair;
+import com.github.peterpaul.fn.Option;
+import com.github.peterpaul.fn.Pair;
 
-import java.util.Optional;
-
-public class OutputHelper {
+public abstract class OutputHelper {
     public static String format(String content, SectionConfiguration sectionConfiguration) {
         Pair<String, String> nextLine = renderNextLine(sectionConfiguration.getFirstLineIndentation(), content, sectionConfiguration);
         String output = nextLine.getLeft();
@@ -18,21 +17,21 @@ public class OutputHelper {
     public static Pair<String, String> renderNextLine(int indentation, String content, SectionConfiguration sectionConfiguration) {
         int splitPosition = getSplitPosition(indentation, content, sectionConfiguration);
         if (splitPosition < 0) {
-            return Pair.of(spaces(indentation) + content, "");
+            return Pair.pair(spaces(indentation) + content, "");
         } else {
-            return Pair.of(spaces(indentation) + content.substring(0, splitPosition),
+            return Pair.pair(spaces(indentation) + content.substring(0, splitPosition),
                     content.substring(splitPosition, content.length()).trim());
         }
     }
 
     private static int getSplitPosition(int indentation, String content, SectionConfiguration sectionConfiguration) {
-        Optional<Integer> lastWordPosition = Optional.empty();
+        Option<Integer> lastWordPosition = Option.none();
         int currentIndex;
         int currentPosition;
         for (currentPosition = indentation, currentIndex = 0; currentPosition < sectionConfiguration.getLineWidth() && currentIndex < content.length(); currentIndex++, currentPosition++) {
             char currentChar = content.charAt(currentIndex);
             if (Character.isWhitespace(currentChar)) {
-                lastWordPosition = Optional.of(currentIndex);
+                lastWordPosition = Option.of(currentIndex);
                 if (currentChar == '\n') {
                     break;
                 } else if (currentChar == '\t') {
@@ -41,9 +40,9 @@ public class OutputHelper {
             }
         }
         if (currentIndex == content.length()) {
-            lastWordPosition = Optional.of(currentIndex);
+            lastWordPosition = Option.of(currentIndex);
         }
-        return lastWordPosition.orElse(getFirstWhitespacePosition(content));
+        return lastWordPosition.or(getFirstWhitespacePosition(content));
     }
 
     public static int getFirstWhitespacePosition(String content) {

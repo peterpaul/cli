@@ -3,15 +3,15 @@ package com.github.peterpaul.cli;
 import org.immutables.value.Value;
 
 @Value.Immutable
-public interface SectionConfiguration {
-    int getLineWidth();
+public abstract class SectionConfiguration {
+    public abstract int getLineWidth();
 
-    int getFirstLineIndentation();
+    public abstract int getFirstLineIndentation();
 
-    int getIndentation();
+    public abstract int getIndentation();
 
     @Value.Check
-    default void check() {
+    public void check() {
         if (getFirstLineIndentation() > getLineWidth()) {
             throw new IllegalArgumentException("firstLineIndentation(" + getFirstLineIndentation() + ") may not be larger than the lineWidth(" + getLineWidth() + ")");
         }

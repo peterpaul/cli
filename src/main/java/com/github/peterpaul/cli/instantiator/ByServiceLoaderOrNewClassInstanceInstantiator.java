@@ -1,5 +1,7 @@
 package com.github.peterpaul.cli.instantiator;
 
+import com.github.peterpaul.fn.Supplier;
+
 import static com.github.peterpaul.cli.fn.ExceptionCatchingSupplier.catchingFor;
 
 public class ByServiceLoaderOrNewClassInstanceInstantiator implements Instantiator {
@@ -7,9 +9,19 @@ public class ByServiceLoaderOrNewClassInstanceInstantiator implements Instantiat
     private final ServiceLoaderInstantiator serviceLoaderInstantiator = new ServiceLoaderInstantiator();
 
     @Override
-    public <T> T instantiate(Class<T> aClass) {
-        return catchingFor(() -> serviceLoaderInstantiator.instantiate(aClass))
+    public <T> T instantiate(final Class<T> aClass) {
+        return catchingFor(new Supplier<T>() {
+            @Override
+            public T get() {
+                return serviceLoaderInstantiator.instantiate(aClass);
+            }
+        })
                 .get()
-                .orElseGet(() -> classInstantiator.instantiate(aClass));
+                .or(new Supplier<T>() {
+                    @Override
+                    public T get() {
+                        return classInstantiator.instantiate(aClass);
+                    }
+                });
     }
 }
