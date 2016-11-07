@@ -15,26 +15,22 @@ import static com.github.peterpaul.fn.Function.mapper;
 import static com.github.peterpaul.fn.Stream.stream;
 
 public class ProgramRunner {
-    public static Function<Class, String> getCommandNameFunction = new Function<Class, String>() {
+    public static final Function<Class, String> GET_COMMAND_NAME = new Function<Class, String>() {
         @Override
         public String apply(Class aClass) {
             return getCommandName(aClass);
         }
     };
-
-    public static Function<Class, Class> getCommandClassFunction = new Function<Class, Class>() {
-        @Override
-        public Class apply(Class aClass) {
-            return getCommandClass(aClass);
-        }
-    };
-
-    public static Function<Class, Pair<String, Class>> getNameToClassMapFunction = new Function<Class, Pair<String, Class>>() {
+    public static final Function<Class, Pair<String, Class>> GET_NAME_TO_CLASS_MAP = new Function<Class, Pair<String, Class>>() {
         @Override
         public Pair<String, Class> apply(Class aClass) {
-            return Pair.pair(getCommandName(aClass), getCommandClass(aClass));
+            return Pair.pair(getCommandName(aClass), aClass);
         }
     };
+
+    public static String getCommandName(Class aClass) {
+        return AnnotationHelper.getCommandAnnotation(aClass).name();
+    }
 
     public static void run(Object command, String[] arguments) {
         run(command, getArgumentList(arguments), getOptionMap(arguments));
@@ -59,14 +55,6 @@ public class ProgramRunner {
         handleOptions(command, optionMap);
         handleArguments(command, argumentList);
         CommandRunner.runCommand(command);
-    }
-
-    public static String getCommandName(Class aClass) {
-        return AnnotationHelper.getCommandAnnotation(aClass).name();
-    }
-
-    public static Class getCommandClass(Class aClass) {
-        return aClass;
     }
 
     private static void runCompositeCommand(final Object command, final List<String> argumentList, final Map<String, String> optionMap) {
@@ -98,7 +86,7 @@ public class ProgramRunner {
                             System.out.println(HelpGenerator.generateHelp(helpCommand));
                         } else {
                             String subCommandsString = stream(commandAnnotation.subCommands())
-                                    .map(getCommandNameFunction)
+                                    .map(GET_COMMAND_NAME)
                                     .reduce(new Reduction<String>() {
                                         @Override
                                         public String apply(String s, String t) {
@@ -115,7 +103,7 @@ public class ProgramRunner {
 
     private static Function<String, Option<Class>> getSubCommandMapper(Cli.Command commandAnnotation) {
         Map<String, Class> subCommandMap = stream(commandAnnotation.subCommands())
-                .toMap(getCommandNameFunction, getCommandClassFunction);
+                .toMap(GET_NAME_TO_CLASS_MAP);
         return mapper(subCommandMap);
     }
 
