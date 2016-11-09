@@ -99,12 +99,7 @@ public class ProgramRunner {
                         } else {
                             String subCommandsString = stream(commandAnnotation.subCommands())
                                     .map(getCommandNameFunction)
-                                    .reduce(new Reduction<String>() {
-                                        @Override
-                                        public String apply(String s, String t) {
-                                            return s + ", " + t;
-                                        }
-                                    })
+                                    .reduce(Reductions.join(", "))
                                     .or("");
                             throw new ValueParseException("Not a subcommand: '" + subCommandArgument + "', allowed are [" + subCommandsString + ']');
                         }
