@@ -5,6 +5,7 @@ import com.github.peterpaul.cli.instantiator.InstantiatorSupplier;
 import com.github.peterpaul.cli.parser.ValueParser;
 import com.github.peterpaul.fn.*;
 
+import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,13 +27,6 @@ public class ProgramRunner {
         @Override
         public Class apply(Class aClass) {
             return getCommandClass(aClass);
-        }
-    };
-
-    public static Function<Class, Pair<String, Class>> getNameToClassMapFunction = new Function<Class, Pair<String, Class>>() {
-        @Override
-        public Pair<String, Class> apply(Class aClass) {
-            return Pair.pair(getCommandName(aClass), getCommandClass(aClass));
         }
     };
 
@@ -74,12 +68,16 @@ public class ProgramRunner {
         final Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
         final Function<String, Option<Class>> subCommandMapper = getSubCommandMapper(commandAnnotation);
         final String subCommandArgument = argumentList.remove(0);
-        subCommandMapper.apply(subCommandArgument)
-                .map(InstantiatorSupplier.instantiate())
-                .map(new Function<Object, Boolean>() {
+        instantiateSubCommand(subCommandMapper, subCommandArgument)
+                .peek(new Consumer<Object>() {
                     @Override
-                    public Boolean apply(Object o) {
-                        return run(o, argumentList, optionMap);
+                    public void consume(@Nonnull final Object o) {
+                        CommandRunner.runCompositeCommand(command, new Runner() {
+                            @Override
+                            public void run() {
+                                ProgramRunner.run(o, argumentList, optionMap);
+                            }
+                        });
                     }
                 })
                 .or(new Supplier<Boolean>() {
@@ -91,7 +89,7 @@ public class ProgramRunner {
                                     .flatMap(new Function<String, Option<Object>>() {
                                         @Override
                                         public Option<Object> apply(String arg) {
-                                            return subCommandMapper.apply(arg).map(InstantiatorSupplier.instantiate());
+                                            return instantiateSubCommand(subCommandMapper, arg);
                                         }
                                     })
                                     .or(Supplier.of(command));
@@ -106,6 +104,11 @@ public class ProgramRunner {
                         return true;
                     }
                 });
+    }
+
+    private static Option<Object> instantiateSubCommand(Function<String, Option<Class>> subCommandMapper, String subCommandName) {
+        return subCommandMapper.apply(subCommandName)
+                .map(InstantiatorSupplier.instantiate());
     }
 
     private static Function<String, Option<Class>> getSubCommandMapper(Cli.Command commandAnnotation) {
