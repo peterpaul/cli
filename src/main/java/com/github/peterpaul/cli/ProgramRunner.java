@@ -21,6 +21,7 @@ public class ProgramRunner {
             return getCommandName(aClass);
         }
     };
+
     public static final Function<Class, Pair<String, Class>> GET_NAME_TO_CLASS_MAP = new Function<Class, Pair<String, Class>>() {
         @Override
         public Pair<String, Class> apply(Class aClass) {
@@ -31,6 +32,20 @@ public class ProgramRunner {
     public static String getCommandName(Class aClass) {
         return AnnotationHelper.getCommandAnnotation(aClass).name();
     }
+
+    public static Function<Class, Class> getCommandClassFunction = new Function<Class, Class>() {
+        @Override
+        public Class apply(Class aClass) {
+            return getCommandClass(aClass);
+        }
+    };
+
+    public static Function<Class, Pair<String, Class>> getNameToClassMapFunction = new Function<Class, Pair<String, Class>>() {
+        @Override
+        public Pair<String, Class> apply(Class aClass) {
+            return Pair.pair(getCommandName(aClass), getCommandClass(aClass));
+        }
+    };
 
     public static void run(Object command, String[] arguments) {
         run(command, getArgumentList(arguments), getOptionMap(arguments));
@@ -57,17 +72,29 @@ public class ProgramRunner {
         CommandRunner.runCommand(command);
     }
 
+    public static String getCommandName(Class aClass) {
+        return AnnotationHelper.getCommandAnnotation(aClass).name();
+    }
+
+    public static Class getCommandClass(Class aClass) {
+        return aClass;
+    }
+
     private static void runCompositeCommand(final Object command, final List<String> argumentList, final Map<String, String> optionMap) {
         handleOptions(command, optionMap);
         final Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
         final Function<String, Option<Class>> subCommandMapper = getSubCommandMapper(commandAnnotation);
         final String subCommandArgument = argumentList.remove(0);
-        subCommandMapper.apply(subCommandArgument)
-                .map(InstantiatorSupplier.instantiate())
-                .map(new Function<Object, Boolean>() {
+        instantiateSubCommand(subCommandMapper, subCommandArgument)
+                .peek(new Consumer<Object>() {
                     @Override
-                    public Boolean apply(Object o) {
-                        return run(o, argumentList, optionMap);
+                    public void consume(@Nonnull final Object o) {
+                        CommandRunner.runCompositeCommand(command, new Runner() {
+                            @Override
+                            public void run() {
+                                ProgramRunner.run(o, argumentList, optionMap);
+                            }
+                        });
                     }
                 })
                 .or(new Supplier<Boolean>() {
@@ -79,7 +106,7 @@ public class ProgramRunner {
                                     .flatMap(new Function<String, Option<Object>>() {
                                         @Override
                                         public Option<Object> apply(String arg) {
-                                            return subCommandMapper.apply(arg).map(InstantiatorSupplier.instantiate());
+                                            return instantiateSubCommand(subCommandMapper, arg);
                                         }
                                     })
                                     .or(Supplier.of(command));
@@ -87,18 +114,18 @@ public class ProgramRunner {
                         } else {
                             String subCommandsString = stream(commandAnnotation.subCommands())
                                     .map(GET_COMMAND_NAME)
-                                    .reduce(new Reduction<String>() {
-                                        @Override
-                                        public String apply(String s, String t) {
-                                            return s + ", " + t;
-                                        }
-                                    })
+                                    .reduce(Reductions.join(", "))
                                     .or("");
                             throw new ValueParseException("Not a subcommand: '" + subCommandArgument + "', allowed are [" + subCommandsString + ']');
                         }
                         return true;
                     }
                 });
+    }
+
+    private static Option<Object> instantiateSubCommand(Function<String, Option<Class>> subCommandMapper, String subCommandName) {
+        return subCommandMapper.apply(subCommandName)
+                .map(InstantiatorSupplier.instantiate());
     }
 
     private static Function<String, Option<Class>> getSubCommandMapper(Cli.Command commandAnnotation) {

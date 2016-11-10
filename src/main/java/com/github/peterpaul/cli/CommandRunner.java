@@ -6,43 +6,116 @@ import com.github.peterpaul.fn.status.NoElements;
 import com.github.peterpaul.fn.status.TooManyElements;
 import com.github.peterpaul.fn.status.UniquenessErrorStatus;
 
+import javax.annotation.Nonnull;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import static com.github.peterpaul.cli.AnnotationHelper.isAnnotationPresent;
+import static com.github.peterpaul.cli.exceptions.ExceptionWrapper.wrap;
+import static com.github.peterpaul.fn.Stream.stream;
 
 public abstract class CommandRunner {
     public static void runCommand(Object command) {
-        Option<Method> runMethod = Stream.stream(getRunMethodByAnnotation(command), getRunMethodByName(command))
-                .filterMap(Function.<Option<Method>>identity())
-                .first();
-        runMethod.peek(new Consumer<Method>() {
-            @Override
-            public void consume(Method method) {
-                int parameterCount = method.getParameterTypes().length;
-                if (parameterCount != 0) {
-                    throw new IllegalRunMethodException("Run method should not take any arguments, however '" + method.getName() + "' has '" + parameterCount + "'");
-                }
-                if (!method.getReturnType().equals(Void.TYPE)) {
-                    throw new IllegalRunMethodException("Run method should not return anything, however '" + method.getName() + "' returns '" + method.getReturnType().getCanonicalName() + "'");
-                }
-            }
-        });
+        Option<Method> runMethod = getRunMethod(command);
         if (runMethod.isPresent()) {
-            try {
-                runMethod.get().invoke(command);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
+            invoke(runMethod.get(), command);
         } else {
             throw new IllegalRunMethodException("No run method found.");
         }
     }
 
-    private static Option<Method> getRunMethodByName(Object command) {
+    public static void runCompositeCommand(Object command, Runner subCommandInvocation) {
+        Option<Method> runMethod = getRunMethod(command, Runner.class);
+        if (runMethod.isPresent()) {
+            invoke(runMethod.get(), command, subCommandInvocation);
+        } else {
+            subCommandInvocation.run();
+        }
+    }
+
+    private static void invoke(Method runMethod, Object command, Object... subCommandInvocation) {
+        try {
+            runMethod.invoke(command, subCommandInvocation);
+        } catch (InvocationTargetException e) {
+            throw wrap(e.getTargetException());
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static Option<Method> getRunMethod(Object command, Class<?>... runMethodArguments) {
+        return stream(getRunMethodByAnnotation(command), getRunMethodByName(command, runMethodArguments))
+                .filterMap(Function.<Option<Method>>identity())
+                .first()
+                .peek(validateCompositeRunMethod(runMethodArguments));
+    }
+
+    private static void validateMethodIsProcedure(Method method) {
+        if (!method.getReturnType().equals(Void.TYPE)) {
+            throw new IllegalRunMethodException("Run method should not return anything, however '" + method.getName() + "' returns '" + method.getReturnType().getCanonicalName() + "'");
+        }
+    }
+
+    private static Consumer<Method> validateCompositeRunMethod(final Class<?>[] requiredMethodArguments) {
+        return new Consumer<Method>() {
+            @Override
+            public void consume(@Nonnull Method method) {
+                int parameterCount = method.getParameterTypes().length;
+                if (parameterCount != requiredMethodArguments.length ||
+                        !allAssignableFrom(requiredMethodArguments, method.getParameterTypes())) {
+                    String requiredParameterTypeNames = getSimpleClassNames(requiredMethodArguments);
+                    String parameterTypeNames = getSimpleClassNames(method.getParameterTypes());
+
+                    throw new IllegalRunMethodException(String
+                            .format("Run method should have %d parameter(s): %s, however %s has %d parameter(s): %s",
+                                    requiredMethodArguments.length,
+                                    requiredParameterTypeNames,
+                                    method.getName(),
+                                    parameterCount,
+                                    parameterTypeNames));
+                }
+                validateMethodIsProcedure(method);
+            }
+        };
+    }
+
+    private static String getSimpleClassNames(Class<?>[] parameterTypes) {
+        return stream(parameterTypes)
+                .map(new Function<Class<?>, String>() {
+                    @Nonnull
+                    @Override
+                    public String apply(@Nonnull Class<?> aClass) {
+                        return aClass.getCanonicalName();
+                    }
+                })
+                .reduce(Reductions.join(", "))
+                .map(new Function<String, String>() {
+                    @Nonnull
+                    @Override
+                    public String apply(@Nonnull String s) {
+                        return "[" + s + ']';
+                    }
+                })
+                .or("[]");
+    }
+
+    private static boolean allAssignableFrom(Class<?>[] runMethodArguments, Class<?>[] parameterTypes) {
+        return stream(runMethodArguments)
+                .zip(stream(parameterTypes))
+                .map(new Function<Pair<Class<?>, Class<?>>, Boolean>() {
+                    @Nonnull
+                    @Override
+                    public Boolean apply(@Nonnull Pair<Class<?>, Class<?>> p) {
+                        return p.getLeft().isAssignableFrom(p.getRight());
+                    }
+                })
+                .reduce(true, Reductions.ALL_TRUE);
+    }
+
+    private static Option<Method> getRunMethodByName(Object command, Class<?>[] arguments) {
         Class<?> commandClass = command.getClass();
         try {
-            Method method = commandClass.getMethod("run");
+            Method method = commandClass.getDeclaredMethod("run", arguments);
             return Option.of(method);
         } catch (NoSuchMethodException e) {
             return Option.none();
@@ -51,7 +124,7 @@ public abstract class CommandRunner {
 
     private static Option<Method> getRunMethodByAnnotation(Object command) {
         Class<?> commandClass = command.getClass();
-        Either<Method, UniquenessErrorStatus<Method>> annotatedRunMethods = Stream.stream(commandClass.getDeclaredMethods())
+        Either<Method, UniquenessErrorStatus<Method>> annotatedRunMethods = stream(commandClass.getDeclaredMethods())
                 .filter(isAnnotationPresent(Cli.Run.class))
                 .unique();
         return annotatedRunMethods.map(
