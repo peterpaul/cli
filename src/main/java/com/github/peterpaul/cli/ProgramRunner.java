@@ -33,20 +33,6 @@ public class ProgramRunner {
         return AnnotationHelper.getCommandAnnotation(aClass).name();
     }
 
-    public static Function<Class, Class> getCommandClassFunction = new Function<Class, Class>() {
-        @Override
-        public Class apply(Class aClass) {
-            return getCommandClass(aClass);
-        }
-    };
-
-    public static Function<Class, Pair<String, Class>> getNameToClassMapFunction = new Function<Class, Pair<String, Class>>() {
-        @Override
-        public Pair<String, Class> apply(Class aClass) {
-            return Pair.pair(getCommandName(aClass), getCommandClass(aClass));
-        }
-    };
-
     public static void run(Object command, String[] arguments) {
         run(command, getArgumentList(arguments), getOptionMap(arguments));
     }
@@ -72,14 +58,6 @@ public class ProgramRunner {
         CommandRunner.runCommand(command);
     }
 
-    public static String getCommandName(Class aClass) {
-        return AnnotationHelper.getCommandAnnotation(aClass).name();
-    }
-
-    public static Class getCommandClass(Class aClass) {
-        return aClass;
-    }
-
     private static void runCompositeCommand(final Object command, final List<String> argumentList, final Map<String, String> optionMap) {
         handleOptions(command, optionMap);
         final Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
@@ -88,7 +66,7 @@ public class ProgramRunner {
         instantiateSubCommand(subCommandMapper, subCommandArgument)
                 .peek(new Consumer<Object>() {
                     @Override
-                    public void consume(@Nonnull final Object o) {
+                    public void consume(final Object o) {
                         CommandRunner.runCompositeCommand(command, new Runner() {
                             @Override
                             public void run() {
