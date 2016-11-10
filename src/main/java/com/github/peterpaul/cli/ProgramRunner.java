@@ -178,6 +178,9 @@ public class ProgramRunner {
                 argumentList.clear();
                 setFieldValue(command, field, value);
             } else {
+                if (argumentList.isEmpty()) {
+                    throw new ValueParseException("Expected more arguments.");
+                }
                 String value = argumentList.remove(0);
                 Object parsedValue = parseValue(field, value, argumentAnnotation.parser(), argumentAnnotation.values());
                 setFieldValue(command, field, parsedValue);
