@@ -145,6 +145,6 @@ public class HelpGenerator {
     }
 
     private static String getNameAndDescription(Cli.Command commandAnnotation, Bundle bundle) {
-        return OutputHelper.format(commandAnnotation.name() + " - " + bundle.apply(commandAnnotation.description()), TOP_LEVEL_SECTION);
+        return OutputHelper.format(commandAnnotation.name() + "\n" + bundle.apply(commandAnnotation.description()), TOP_LEVEL_SECTION);
     }
 }

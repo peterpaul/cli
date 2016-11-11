@@ -7,7 +7,6 @@ An annotation based CLI framework for Java.
 Below is a `Hello World` example, showcasing all annotations:
 
 ```Java
-// 
 @Cli.Command(name = "HelloWorld", description = "some command")
 public class HelloWorld {
     @Cli.Option(description = "some option", shortName = 'U')
@@ -36,7 +35,8 @@ When run without arguments, this will produce the following output:
 ```
 Error: Expected more arguments.
 
-HelloWorld - some command
+HelloWorld
+    some command
 
 USAGE: HelloWorld [OPTION...]  who
 WHERE:
