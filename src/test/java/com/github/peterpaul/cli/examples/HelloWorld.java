@@ -12,7 +12,7 @@ public class HelloWorld {
     private String who;
 
     public static void main(String[] args) {
-        ProgramRunner.run(new HelloWorld(), args);
+        ProgramRunner.run(HelloWorld.class, args);
     }
 
     @Cli.Run

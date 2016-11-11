@@ -33,6 +33,10 @@ public class ProgramRunner {
         return AnnotationHelper.getCommandAnnotation(aClass).name();
     }
 
+    public static void run(Class commandClass, String[] arguments) {
+        run(InstantiatorSupplier.instantiate(commandClass), arguments);
+    }
+
     public static void run(Object command, String[] arguments) {
         run(command, getArgumentList(arguments), getOptionMap(arguments));
     }
