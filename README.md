@@ -136,12 +136,13 @@ public class MyTypeParser implements ValueParser<MyType> {
 Value parsers can be registered in the `@Cli.Argument` annotation (see the bold sections.)
 
 <pre lang="java">
+@Cli.Command(name = "HelloWorldArg", description = "some command")
 public class HelloWorldArg {
     @Cli.Option(description = "some option", shortName = 'U')
     private boolean uppercase;
 
-    @Cli.Argument(description = "some argument", <b>parser = MyTypeParser.class</b>)
-    private <b>MyType</b> who;
+    @Cli.Argument(description = "some argument", <strong>parser = MyTypeParser.class</strong>)
+    private <strong>MyType</strong> who;
 
     public static void main(String[] args) {
         ProgramRunner.run(HelloWorldArg.class, args);
@@ -149,7 +150,7 @@ public class HelloWorldArg {
 
     @Cli.Run
     public void perform() {
-        String value = "Hello " + <b>who.getValue()</b>;
+        String value = "Hello " + <strong>who.getValue()</strong>;
         if (uppercase) {
             value = value.toUpperCase();
         }
@@ -173,7 +174,7 @@ public class HelloWorldArg {
     private boolean uppercase;
 
     @Cli.Argument(description = "some argument")
-    private <b>MyType</b> who;
+    private <strong>MyType</strong> who;
 
     public static void main(String[] args) {
         ProgramRunner.run(HelloWorldArg.class, args);
@@ -181,7 +182,7 @@ public class HelloWorldArg {
 
     @Cli.Run
     public void perform() {
-        String value = "Hello " + <b>who.getValue()</b>;
+        String value = "Hello " + <strong>who.getValue()</strong>;
         if (uppercase) {
             value = value.toUpperCase();
         }
