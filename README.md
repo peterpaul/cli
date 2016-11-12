@@ -84,6 +84,19 @@ private MyType argument;
 </pre>
 
 ## Options
+
+<pre lang="Java">
+@Cli.Option(
+    name = "option-name",
+    shortName = 'o',
+    description = "explains the purpose of this option",
+    values = {"all", "allowed", "values"},
+    parser = MyTypeParser.class,
+    defaultValue = "allowed"    
+)
+private MyType option;
+</pre>
+
 ## Composite Commands
 ## ValueParser
 
