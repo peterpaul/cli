@@ -1,22 +1,28 @@
 package com.github.peterpaul.cli.locale;
 
-import java.util.Optional;
+import com.github.peterpaul.fn.Function;
+import com.github.peterpaul.fn.Option;
+
 import java.util.ResourceBundle;
-import java.util.function.Function;
 
-public class Bundle implements Function<String, String> {
-    private final Optional<ResourceBundle> resourceBundle;
+public class Bundle extends Function<String, String> {
+    private final Option<ResourceBundle> resourceBundle;
 
-    public Bundle(Optional<ResourceBundle> resourceBundle) {
+    public Bundle(Option<ResourceBundle> resourceBundle) {
         this.resourceBundle = resourceBundle;
     }
 
     @Override
-    public String apply(String s) {
+    public String apply(final String s) {
         return resourceBundle
-                .map(r -> r.containsKey(s)
-                        ? r.getString(s)
-                        : s)
-                .orElse(s);
+                .map(new Function<ResourceBundle, String>() {
+                    @Override
+                    public String apply(ResourceBundle r) {
+                        return r.containsKey(s)
+                                ? r.getString(s)
+                                : s;
+                    }
+                })
+                .or(s);
     }
 }

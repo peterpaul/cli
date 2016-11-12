@@ -1,13 +1,18 @@
 package com.github.peterpaul.cli.collection;
 
+import com.github.peterpaul.cli.exceptions.NoElementsException;
+import com.github.peterpaul.cli.exceptions.TooManyElementException;
+import com.github.peterpaul.fn.Function;
+import com.github.peterpaul.fn.Stream;
+import com.github.peterpaul.fn.status.NoElements;
+import com.github.peterpaul.fn.status.TooManyElements;
+import com.github.peterpaul.fn.status.UniquenessErrorStatus;
+
 import java.util.ServiceLoader;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public abstract class ServiceLoaderStreamer {
     public static <T> Stream<T> stream(Class<T> aClass) {
-        return StreamSupport.stream(ServiceLoader.load(aClass).spliterator(), false);
+        return Stream.stream(ServiceLoader.load(aClass));
     }
 
     /**
@@ -18,7 +23,25 @@ public abstract class ServiceLoaderStreamer {
      * @throws com.github.peterpaul.cli.exceptions.TooManyElementException If multiple instances are available.
      */
     public static <T> T loadUniqueInstance(Class<T> aClass) {
-        return CollectionUtil.getUnique(stream(aClass)
-                .collect(Collectors.toSet()));
+        return stream(aClass).unique().map(
+                Function.<T>identity(),
+                new Function<UniquenessErrorStatus<T>, T>() {
+                    @Override
+                    public T apply(UniquenessErrorStatus<T> errorStatus) {
+                        return errorStatus.getStatus().map(
+                                new Function<NoElements, T>() {
+                                    @Override
+                                    public T apply(NoElements noElements) {
+                                        throw new NoElementsException();
+                                    }
+                                },
+                                new Function<TooManyElements<T>, T>() {
+                                    @Override
+                                    public T apply(TooManyElements<T> tooManyElements) {
+                                        throw new TooManyElementException(tooManyElements.getItems());
+                                    }
+                                });
+                    }
+                });
     }
 }

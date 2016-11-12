@@ -1,9 +1,9 @@
 package com.github.peterpaul.cli.fn;
 
-import java.util.Optional;
-import java.util.function.Supplier;
+import com.github.peterpaul.fn.Option;
+import com.github.peterpaul.fn.Supplier;
 
-public class ExceptionCatchingSupplier<T> implements Supplier<Optional<T>> {
+public class ExceptionCatchingSupplier<T> extends Supplier<Option<T>> {
     private final Supplier<T> supplier;
 
     private ExceptionCatchingSupplier(Supplier<T> supplier) {
@@ -15,11 +15,11 @@ public class ExceptionCatchingSupplier<T> implements Supplier<Optional<T>> {
     }
 
     @Override
-    public Optional<T> get() {
+    public Option<T> get() {
         try {
-            return Optional.of(supplier.get());
+            return Option.of(supplier.get());
         } catch (RuntimeException e) {
-            return Optional.empty();
+            return Option.none();
         }
     }
 }

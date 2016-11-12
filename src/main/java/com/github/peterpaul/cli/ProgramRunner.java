@@ -3,19 +3,40 @@ package com.github.peterpaul.cli;
 import com.github.peterpaul.cli.exceptions.ValueParseException;
 import com.github.peterpaul.cli.instantiator.InstantiatorSupplier;
 import com.github.peterpaul.cli.parser.ValueParser;
+import com.github.peterpaul.fn.*;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static com.github.peterpaul.cli.fn.MapperFunction.mapper;
+import static com.github.peterpaul.fn.Function.mapper;
+import static com.github.peterpaul.fn.Stream.stream;
 
 public class ProgramRunner {
+    public static final Function<Class, String> GET_COMMAND_NAME = new Function<Class, String>() {
+        @Override
+        public String apply(Class aClass) {
+            return getCommandName(aClass);
+        }
+    };
+
+    public static final Function<Class, Pair<String, Class>> GET_NAME_TO_CLASS_MAP = new Function<Class, Pair<String, Class>>() {
+        @Override
+        public Pair<String, Class> apply(Class aClass) {
+            return Pair.pair(getCommandName(aClass), aClass);
+        }
+    };
+
+    public static String getCommandName(Class aClass) {
+        return AnnotationHelper.getCommandAnnotation(aClass).name();
+    }
+
+    public static void run(Class commandClass, String[] arguments) {
+        run(InstantiatorSupplier.instantiate(commandClass), arguments);
+    }
+
     public static void run(Object command, String[] arguments) {
         run(command, getArgumentList(arguments), getOptionMap(arguments));
     }
@@ -41,41 +62,57 @@ public class ProgramRunner {
         CommandRunner.runCommand(command);
     }
 
-    public static String getCommandName(Class aClass) {
-        return AnnotationHelper.getCommandAnnotation(aClass).name();
-    }
-
-    public static Class getCommandClass(Class aClass) {
-        return aClass;
-    }
-
-    private static void runCompositeCommand(Object command, List<String> argumentList, Map<String, String> optionMap) {
+    private static void runCompositeCommand(final Object command, final List<String> argumentList, final Map<String, String> optionMap) {
         handleOptions(command, optionMap);
-        Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
-        Function<String, Optional<Class>> subCommandMapper = getSubCommandMapper(commandAnnotation);
-        String subCommandArgument = argumentList.remove(0);
-        subCommandMapper.apply(subCommandArgument)
-                .map((Function<Class, Object>) InstantiatorSupplier::instantiate)
-                .map(c -> run(c, argumentList, optionMap))
-                .orElseGet(() -> {
-                    if (subCommandArgument.equals("help")) {
-                        Object helpCommand = argumentList
-                                .stream()
-                                .findFirst()
-                                .flatMap(arg -> subCommandMapper.apply(arg).map(InstantiatorSupplier::instantiate))
-                                .orElseGet(() -> command);
-                        System.out.println(HelpGenerator.generateHelp(helpCommand));
-                    } else {
-                        String subCommandsString = Arrays.stream(commandAnnotation.subCommands()).map(ProgramRunner::getCommandName).reduce((s, t) -> s + ", " + t).orElse("");
-                        throw new ValueParseException("Not a subcommand: '" + subCommandArgument + "', allowed are [" + subCommandsString + ']');
+        final Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
+        final Function<String, Option<Class>> subCommandMapper = getSubCommandMapper(commandAnnotation);
+        final String subCommandArgument = argumentList.remove(0);
+        instantiateSubCommand(subCommandMapper, subCommandArgument)
+                .peek(new Consumer<Object>() {
+                    @Override
+                    public void consume(final Object o) {
+                        CommandRunner.runCompositeCommand(command, new Runner() {
+                            @Override
+                            public void run() {
+                                ProgramRunner.run(o, argumentList, optionMap);
+                            }
+                        });
                     }
-                    return true;
+                })
+                .or(new Supplier<Boolean>() {
+                    @Override
+                    public Boolean get() {
+                        if (subCommandArgument.equals("help")) {
+                            Object helpCommand = stream(argumentList)
+                                    .first()
+                                    .flatMap(new Function<String, Option<Object>>() {
+                                        @Override
+                                        public Option<Object> apply(String arg) {
+                                            return instantiateSubCommand(subCommandMapper, arg);
+                                        }
+                                    })
+                                    .or(Supplier.of(command));
+                            System.out.println(HelpGenerator.generateHelp(helpCommand));
+                        } else {
+                            String subCommandsString = stream(commandAnnotation.subCommands())
+                                    .map(GET_COMMAND_NAME)
+                                    .reduce(Reductions.join(", "))
+                                    .or("");
+                            throw new ValueParseException("Not a subcommand: '" + subCommandArgument + "', allowed are [" + subCommandsString + ']');
+                        }
+                        return true;
+                    }
                 });
     }
 
-    private static Function<String, Optional<Class>> getSubCommandMapper(Cli.Command commandAnnotation) {
-        Map<String, Class> subCommandMap = Arrays.stream(commandAnnotation.subCommands())
-                .collect(Collectors.toMap(ProgramRunner::getCommandName, ProgramRunner::getCommandClass));
+    private static Option<Object> instantiateSubCommand(Function<String, Option<Class>> subCommandMapper, String subCommandName) {
+        return subCommandMapper.apply(subCommandName)
+                .map(InstantiatorSupplier.instantiate());
+    }
+
+    private static Function<String, Option<Class>> getSubCommandMapper(Cli.Command commandAnnotation) {
+        Map<String, Class> subCommandMap = stream(commandAnnotation.subCommands())
+                .toMap(GET_NAME_TO_CLASS_MAP);
         return mapper(subCommandMap);
     }
 
@@ -88,17 +125,15 @@ public class ProgramRunner {
         }
     }
 
-    private static Optional<String> getOptionValue(Map<String, String> optionMap, Field field) {
+    private static Option<String> getOptionValue(Map<String, String> optionMap, Field field) {
         Cli.Option optionAnnotation = AnnotationHelper.getOptionAnnotation(field);
         String name = FieldsProvider.getName(field, optionAnnotation.name());
-        Optional<String> valueFromCommandLine = Stream.of(
+        Option<String> valueFromCommandLine = stream(
                 "--" + name,
                 "-" + optionAnnotation.shortName())
-
-                .filter(n -> n != null)
-                .map(optionMap::get)
-                .filter(n -> n != null)
-                .findFirst();
+                .map(mapper(optionMap))
+                .filterMap(Function.<Option<String>>identity())
+                .first();
         if (valueFromCommandLine.isPresent()) {
             return valueFromCommandLine;
         } else {
@@ -107,31 +142,49 @@ public class ProgramRunner {
     }
 
     private static List<String> getArgumentList(String[] arguments) {
-        return Arrays.stream(arguments)
-                .filter(s -> !s.startsWith("-"))
-                .collect(Collectors.toList());
+        return stream(arguments)
+                .filter(new Predicate<String>() {
+                    @Override
+                    public Boolean apply(String s) {
+                        return !s.startsWith("-");
+                    }
+                })
+                .to(new ArrayList<String>());
     }
 
     private static Map<String, String> getOptionMap(String[] arguments) {
-        return Arrays.stream(arguments)
-                .filter(s -> s.startsWith("-"))
-                .collect(Collectors.toMap(ActualOptionParser::optionKey, ActualOptionParser::optionValue));
+        return stream(arguments)
+                .filter(new Predicate<String>() {
+                    @Override
+                    public Boolean apply(String s) {
+                        return s.startsWith("-");
+                    }
+                })
+                .toMap(ActualOptionParser.optionKey(), ActualOptionParser.optionValue());
     }
 
     private static void handleArguments(Object command, List<String> argumentList) {
         Class<?> commandClass = command.getClass();
         List<Field> declaredArgumentList = FieldsProvider.getArgumentList(commandClass);
         for (int i = 0; i < declaredArgumentList.size(); i++) {
-            Field field = declaredArgumentList.get(i);
-            Cli.Argument argumentAnnotation = AnnotationHelper.getArgumentAnnotation(field);
+            final Field field = declaredArgumentList.get(i);
+            final Cli.Argument argumentAnnotation = AnnotationHelper.getArgumentAnnotation(field);
             if (isLastArgument(declaredArgumentList, i)
                     && ArgumentParserMatcher.argumentParserDoesNotMatchFieldType(field, argumentAnnotation)) {
-                List<Object> value = argumentList.stream()
-                        .map(a -> parseValue(field, a, argumentAnnotation.parser(), argumentAnnotation.values()))
-                        .collect(Collectors.toList());
+                List<Object> value = stream(argumentList)
+                        .map(new Function<String, Object>() {
+                            @Override
+                            public Object apply(String a) {
+                                return parseValue(field, a, argumentAnnotation.parser(), argumentAnnotation.values());
+                            }
+                        })
+                        .to(new ArrayList<>());
                 argumentList.clear();
                 setFieldValue(command, field, value);
             } else {
+                if (argumentList.isEmpty()) {
+                    throw new ValueParseException("Expected more arguments.");
+                }
                 String value = argumentList.remove(0);
                 Object parsedValue = parseValue(field, value, argumentAnnotation.parser(), argumentAnnotation.values());
                 setFieldValue(command, field, parsedValue);
@@ -146,23 +199,36 @@ public class ProgramRunner {
         return i == declaredArgumentList.size() - 1;
     }
 
-    private static void handleOptions(Object command, Map<String, String> optionMap) {
+    private static void handleOptions(final Object command, final Map<String, String> optionMap) {
         Class<?> commandClass = command.getClass();
         FieldsProvider.getOptionStream(commandClass)
-                .forEach((field) -> {
-                    Cli.Option optionAnnotation = AnnotationHelper.getOptionAnnotation(field);
-                    Optional<String> value = getOptionValue(optionMap, field);
-                    if (value.isPresent()) {
-                        Object parsedValue = parseValue(field, value.get(), optionAnnotation.parser(), optionAnnotation.values());
-                        setFieldValue(command, field, parsedValue);
+                .forEach(new Consumer<Field>() {
+                    @Override
+                    public void consume(Field field) {
+                        Cli.Option optionAnnotation = AnnotationHelper.getOptionAnnotation(field);
+                        Option<String> value = getOptionValue(optionMap, field);
+                        if (value.isPresent()) {
+                            Object parsedValue = parseValue(field, value.get(), optionAnnotation.parser(), optionAnnotation.values());
+                            setFieldValue(command, field, parsedValue);
+                        }
                     }
                 });
     }
 
-    private static Object parseValue(Field field, String value, Class<? extends ValueParser> valueParserClass, String[] values) {
-        ValueParser valueParser = ValueParserProvider.getValueParser(field, valueParserClass);
+    private static Object parseValue(Field field, final String value, Class<? extends ValueParser> valueParserClass, final String[] values) {
+        final ValueParser valueParser = ValueParserProvider.getValueParser(field, valueParserClass);
         return AnnotationHelper.checkedValue(value, values)
-                .map((Function<String, Object>) valueParser::parse)
-                .orElseThrow(() -> new ValueParseException("value '" + value + "' not allowed, allowed are '" + Arrays.asList(values) + "'"));
+                .map(new Function<String, Object>() {
+                    @Override
+                    public Object apply(String s) {
+                        return valueParser.parse(s);
+                    }
+                })
+                .orThrow(new Supplier<RuntimeException>() {
+                    @Override
+                    public RuntimeException get() {
+                        return new ValueParseException("value '" + value + "' not allowed, allowed are '" + Arrays.asList(values) + "'");
+                    }
+                });
     }
 }
