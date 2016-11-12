@@ -50,6 +50,9 @@ public class ProgramRunner {
         handleOptions(command, optionMap);
         final Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
         final Function<String, Option<Class>> subCommandMapper = getSubCommandMapper(commandAnnotation);
+        if (argumentList.isEmpty()) {
+            throw new ValueParseException("Expected COMMAND");
+        }
         final String subCommandArgument = argumentList.remove(0);
         instantiateSubCommand(subCommandMapper, subCommandArgument)
                 .peek(new Consumer<Object>() {
@@ -167,7 +170,7 @@ public class ProgramRunner {
                 setFieldValue(command, field, value);
             } else {
                 if (argumentList.isEmpty()) {
-                    throw new ValueParseException("Expected more arguments.");
+                    throw new ValueParseException("Expected argument " + FieldsProvider.getName(field, argumentAnnotation.name()));
                 }
                 String value = argumentList.remove(0);
                 Object parsedValue = parseValue(field, value, argumentAnnotation.parser(), argumentAnnotation.values());
