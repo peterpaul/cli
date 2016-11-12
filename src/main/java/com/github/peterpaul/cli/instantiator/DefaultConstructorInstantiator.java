@@ -1,6 +1,6 @@
 package com.github.peterpaul.cli.instantiator;
 
-public class ClassInstantiator implements Instantiator {
+public class DefaultConstructorInstantiator implements Instantiator {
     @Override
     public <T> T instantiate(Class<T> aClass) {
         try {

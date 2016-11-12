@@ -75,7 +75,7 @@ public class ProgramRunner {
                                             return instantiateSubCommand(subCommandMapper, arg);
                                         }
                                     })
-                                    .or(Supplier.of(command));
+                                    .or(Suppliers.of(command));
                             System.out.println(HelpGenerator.generateHelp(helpCommand));
                         } else {
                             String subCommandsString = stream(commandAnnotation.subCommands())

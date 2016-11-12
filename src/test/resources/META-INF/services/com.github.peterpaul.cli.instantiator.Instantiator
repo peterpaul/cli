@@ -1,1 +1,1 @@
-com.github.peterpaul.cli.instantiator.ByServiceLoaderOrNewClassInstanceInstantiator
+com.github.peterpaul.cli.instantiator.ByServiceLoaderOrDefaultConstructorInstantiator

@@ -27,6 +27,6 @@ public class InstantiatorSupplier extends Supplier<Instantiator> {
     @Override
     public Instantiator get() {
         return tryLoadUniqueInstance(Instantiator.class)
-                .or(new ClassInstantiator());
+                .or(new DefaultConstructorInstantiator());
     }
 }
