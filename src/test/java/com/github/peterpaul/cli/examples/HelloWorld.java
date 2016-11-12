@@ -16,7 +16,7 @@ public class HelloWorld {
     }
 
     @Cli.Run
-    void perform() {
+    public void perform() {
         String value = "Hello " + who;
         if (uppercase) {
             value = value.toUpperCase();
