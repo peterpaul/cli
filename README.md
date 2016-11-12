@@ -68,7 +68,7 @@ OPTION:
 
 An argument can have a `name`, a `description`, default `values` and a value `parser`.
 
-The argument `name` is only used for display purposes in the generated help output. If the `name` is not supplied in the argument, then the field name will be used.
+The argument's `name` is only used for display purposes in the generated help output. If the `name` is not supplied in the argument, then the field name will be used.
 `description` is mandatory, it is used in the generated help output.
 `values` are the accepted values for the argument. When any other value is supplied, an error is displayed with usage.
 `parser` can be used to specify a parser for the type, see [ValueParser](#valueparser).
@@ -85,6 +85,14 @@ private MyType argument;
 
 ## Options
 
+Next to the `name`, `description`, `values` and `parser` attributes, a `@Cli.Option` can have a single character `shortName` and a `defaultValue`.
+
+The option's `name` and `shortName` are used to parse options from the command line. On the command line the `name` is prefixed with `--`, the `shortName` with `-`.
+
+All options, except boolean options, take an argument that must be provided after an `=` sign.
+
+When an option is not supplied on the command line, the `defaultValue` is applied if present, or the default from source code is used. The `defaultValue` is matched against the accepted `values`, if present.
+
 <pre lang="Java">
 @Cli.Option(
     name = "option-name",
@@ -96,6 +104,10 @@ private MyType argument;
 )
 private MyType option;
 </pre>
+
+### Boolean Options
+
+Boolean options don't need to be given a value. If the option is present on the command line, but the value is not specified, the value will be set to `true`. 
 
 ## Composite Commands
 ## ValueParser
