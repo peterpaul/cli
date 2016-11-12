@@ -1,10 +1,7 @@
 package com.github.peterpaul.cli;
 
 import com.github.peterpaul.cli.locale.Bundle;
-import com.github.peterpaul.fn.Function;
-import com.github.peterpaul.fn.Option;
-import com.github.peterpaul.fn.Predicate;
-import com.github.peterpaul.fn.Stream;
+import com.github.peterpaul.fn.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
@@ -17,6 +14,19 @@ import static com.github.peterpaul.fn.Predicates.equalTo;
 import static com.github.peterpaul.fn.Stream.stream;
 
 public abstract class AnnotationHelper {
+    public static final Function<Class, String> GET_COMMAND_NAME = new Function<Class, String>() {
+        @Override
+        public String apply(Class aClass) {
+            return getCommandName(aClass);
+        }
+    };
+    public static final Function<Class, Pair<String, Class>> GET_NAME_TO_CLASS_MAP = new Function<Class, Pair<String, Class>>() {
+        @Override
+        public Pair<String, Class> apply(Class aClass) {
+            return Pair.pair(getCommandName(aClass), aClass);
+        }
+    };
+
     public static <T extends AccessibleObject> Predicate<T> isAnnotationPresent(final Class<? extends Annotation> aClass) {
         return new Predicate<T>() {
             @Override
@@ -71,5 +81,9 @@ public abstract class AnnotationHelper {
                         return ResourceBundle.getBundle(r, Locale.getDefault());
                     }
                 }));
+    }
+
+    public static String getCommandName(Class aClass) {
+        return getCommandAnnotation(aClass).name();
     }
 }

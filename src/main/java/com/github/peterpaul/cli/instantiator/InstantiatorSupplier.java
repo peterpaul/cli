@@ -3,7 +3,7 @@ package com.github.peterpaul.cli.instantiator;
 import com.github.peterpaul.fn.Function;
 import com.github.peterpaul.fn.Supplier;
 
-import static com.github.peterpaul.cli.collection.ServiceLoaderStreamer.loadUniqueInstance;
+import static com.github.peterpaul.cli.collection.ServiceLoaderStreamer.tryLoadUniqueInstance;
 
 public class InstantiatorSupplier extends Supplier<Instantiator> {
     private static final Supplier<Instantiator> INSTANTIATOR_SUPPLIER = new InstantiatorSupplier().cache();
@@ -26,6 +26,7 @@ public class InstantiatorSupplier extends Supplier<Instantiator> {
 
     @Override
     public Instantiator get() {
-        return loadUniqueInstance(Instantiator.class);
+        return tryLoadUniqueInstance(Instantiator.class)
+                .or(new ClassInstantiator());
     }
 }

@@ -11,28 +11,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.peterpaul.fn.Function.mapper;
+import static com.github.peterpaul.cli.AnnotationHelper.GET_COMMAND_NAME;
+import static com.github.peterpaul.cli.AnnotationHelper.GET_NAME_TO_CLASS_MAP;
+import static com.github.peterpaul.fn.Functions.mapper;
 import static com.github.peterpaul.fn.Stream.stream;
 
 public class ProgramRunner {
-    public static final Function<Class, String> GET_COMMAND_NAME = new Function<Class, String>() {
-        @Override
-        public String apply(Class aClass) {
-            return getCommandName(aClass);
-        }
-    };
-
-    public static final Function<Class, Pair<String, Class>> GET_NAME_TO_CLASS_MAP = new Function<Class, Pair<String, Class>>() {
-        @Override
-        public Pair<String, Class> apply(Class aClass) {
-            return Pair.pair(getCommandName(aClass), aClass);
-        }
-    };
-
-    public static String getCommandName(Class aClass) {
-        return AnnotationHelper.getCommandAnnotation(aClass).name();
-    }
-
     public static void run(Class commandClass, String[] arguments) {
         run(InstantiatorSupplier.instantiate(commandClass), arguments);
     }
@@ -132,7 +116,7 @@ public class ProgramRunner {
                 "--" + name,
                 "-" + optionAnnotation.shortName())
                 .map(mapper(optionMap))
-                .filterMap(Function.<Option<String>>identity())
+                .filterMap(Functions.<Option<String>>identity())
                 .first();
         if (valueFromCommandLine.isPresent()) {
             return valueFromCommandLine;

@@ -27,7 +27,7 @@ public abstract class ValueParserProvider {
                                     });
                         }
                     })
-                    .toMap(Function.<Pair<Class, ValueParser>>identity());
+                    .toMap(Functions.<Pair<Class, ValueParser>>identity());
         }
     }.cache();
 

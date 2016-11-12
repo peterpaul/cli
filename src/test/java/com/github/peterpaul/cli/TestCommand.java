@@ -20,6 +20,7 @@ public class TestCommand {
     @Cli.Argument(description = "File argument, with registered ValueParser.", parser = FileValueParser.class)
     private File file;
 
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     @Cli.Argument(description = "List of optional arguments, must occur as last argument.", parser = StringValueParser.class)
     private List<String> args;
 

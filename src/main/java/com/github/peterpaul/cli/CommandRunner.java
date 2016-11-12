@@ -35,6 +35,7 @@ public abstract class CommandRunner {
 
     private static void invoke(Method runMethod, Object command, Object... subCommandInvocation) {
         try {
+            runMethod.setAccessible(true);
             runMethod.invoke(command, subCommandInvocation);
         } catch (InvocationTargetException e) {
             throw wrap(e.getTargetException());
@@ -45,7 +46,7 @@ public abstract class CommandRunner {
 
     private static Option<Method> getRunMethod(Object command, Class<?>... runMethodArguments) {
         return stream(getRunMethodByAnnotation(command), getRunMethodByName(command, runMethodArguments))
-                .filterMap(Function.<Option<Method>>identity())
+                .filterMap(Functions.<Option<Method>>identity())
                 .first()
                 .peek(validateCompositeRunMethod(runMethodArguments));
     }
@@ -61,8 +62,8 @@ public abstract class CommandRunner {
             @Override
             public void consume(@Nonnull Method method) {
                 int parameterCount = method.getParameterTypes().length;
-                if (parameterCount != requiredMethodArguments.length ||
-                        !allAssignableFrom(requiredMethodArguments, method.getParameterTypes())) {
+                if (!(parameterCount == requiredMethodArguments.length &&
+                        allAssignableFrom(requiredMethodArguments, method.getParameterTypes()))) {
                     String requiredParameterTypeNames = getSimpleClassNames(requiredMethodArguments);
                     String parameterTypeNames = getSimpleClassNames(method.getParameterTypes());
 
