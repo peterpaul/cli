@@ -32,25 +32,25 @@ public class HelloWorld {
 
 This defines a program with one command, a mandatory argument and one option. The `ProgramRunner.run(...)` method will parse the arguments and set values to the corresponding fields.
 
-The compiled binary, for example `HelloWorld`, can now be invoked in the following way:
+The compiled binary, for example `hello`, can now be invoked in the following way:
 
 <pre>
-$ HelloWorld World
+$ hello World
 Hello World
-$ HelloWorld -U Earth
+$ hello -U Earth
 HELLO EARTH
-$ HelloWorld World --uppercase=false
+$ hello World --uppercase=false
 Hello World
-$ HelloWorld Earth -U=false
+$ hello Earth -U=false
 Hello Earth
-$ HelloWorld --uppercase People
+$ hello --uppercase People
 HELLO PEOPLE
 </pre>
 
 When run without arguments, this will produce the following output:
 
 <pre>
-$ HelloWorld
+$ hello
 Error: Expected more arguments.
 
 HelloWorld
@@ -92,6 +92,8 @@ The option's `name` and `shortName` are used to parse options from the command l
 All options, except boolean options, take an argument that must be provided after an `=` sign.
 
 When an option is not supplied on the command line, the `defaultValue` is applied if present, or the default from source code is used. The `defaultValue` is matched against the accepted `values`, if present.
+
+Options can be placed anywhere on the commandline (after the binary.) 
 
 <pre lang="Java">
 @Cli.Option(
