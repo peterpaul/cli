@@ -171,6 +171,32 @@ OPTION:
                 some option
 </pre>
 
+Composite commands only take one argument, but can have options and a run method. The run method for composite commands is a void method that can take a `Runner` argument that corresponds to invoking the subcommand. Consider the following example.
+
+<pre>
+@Cli.Command(
+        description = "Transaction subcommands example",
+        subCommands = {HelloWorld.class, Greeter.class, GreeterMyType.class}
+)
+public class TransactionalCommand {
+    public static void main(String[] args) {
+        ProgramRunner.run(TransactionalCommand.class, args);
+    }
+
+    void run(Runner subCommand) {
+        Transaction transaction = Transaction.begin();
+        try {
+            subCommand.run();
+            transaction.commit();
+        } catch (RuntimeException e) {
+            transaction.rollback();
+        }
+    }
+}
+</pre>
+
+This command will wrap the subcommand in a transaction that will be committed upon success, and rolledback upon failure.
+
 ## ValueParser
 
 Next to supporting some standard types as arguments and options, ProgramRunner is extensible with additional parsers. Additional value parsers are discovered using `ServiceLoader`, or via the `parser` option at the `@Cli.Argument` and `@Cli.Option` annotations.
@@ -295,5 +321,4 @@ A custom `Instantiator` can be registered via `ServiceLoader` in the file `META-
 
 This mechanism can be used to hook up specific injection framework.
 
-## Run
 ## I18n
