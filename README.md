@@ -173,7 +173,7 @@ OPTION:
 
 Composite commands only take one argument, but can have options and a run method. The run method for composite commands is a void method that can take a `Runner` argument that corresponds to invoking the subcommand. Consider the following example.
 
-<pre>
+<pre lang="Java">
 @Cli.Command(
         description = "Transaction subcommands example",
         subCommands = {HelloWorld.class, Greeter.class, GreeterMyType.class}
