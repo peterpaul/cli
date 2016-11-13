@@ -3,8 +3,8 @@ package com.github.peterpaul.cli.examples;
 import com.github.peterpaul.cli.Cli;
 import com.github.peterpaul.cli.ProgramRunner;
 
-@Cli.Command(name = "HelloWorldArg", description = "some command")
-public class HelloWorldArg {
+@Cli.Command(name = "GreeterMyType", description = "some command")
+public class GreeterMyType {
     @Cli.Option(description = "some option", shortName = 'U')
     private boolean uppercase;
 
@@ -12,7 +12,7 @@ public class HelloWorldArg {
     private MyType who;
 
     public static void main(String[] args) {
-        ProgramRunner.run(HelloWorldArg.class, args);
+        ProgramRunner.run(GreeterMyType.class, args);
     }
 
     @Cli.Run

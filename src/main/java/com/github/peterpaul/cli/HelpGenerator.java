@@ -5,9 +5,12 @@ import com.github.peterpaul.fn.Function;
 import com.github.peterpaul.fn.Option;
 import com.github.peterpaul.fn.Stream;
 
+import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.util.Objects;
 
+import static com.github.peterpaul.cli.AnnotationHelper.getCommandAnnotation;
+import static com.github.peterpaul.cli.AnnotationHelper.getCommandName;
 import static com.github.peterpaul.fn.Reductions.join;
 
 public class HelpGenerator {
@@ -24,17 +27,17 @@ public class HelpGenerator {
     }
 
     public static String generateHelp(Object command) {
-        Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
+        Cli.Command commandAnnotation = getCommandAnnotation(command);
         Bundle bundle = AnnotationHelper.getResourceBundle(commandAnnotation);
         if (commandAnnotation.subCommands().length == 0) {
-            return getNameAndDescription(commandAnnotation, bundle) + "\n\n"
+            return getNameAndDescription(command, bundle) + "\n\n"
                     + getUsage(command) + "\n"
-                    + getArgumentHelp(command, bundle) + "\n"
+                    + getArgumentHelp(command, bundle)
                     + getOptionHelp(command, bundle)
                     ;
         } else {
-            return getNameAndDescription(commandAnnotation, bundle) + "\n\n"
-                    + OutputHelper.format("USAGE: " + commandAnnotation.name() + " [OPTION...] COMMAND", TOP_LEVEL_SECTION) + "\n"
+            return getNameAndDescription(command, bundle) + "\n\n"
+                    + OutputHelper.format("USAGE: " + getCommandName(command.getClass()) + getUsageOptions(command) + " COMMAND", TOP_LEVEL_SECTION) + "\n"
                     + getSubCommands(commandAnnotation, bundle) + "\n"
                     + getOptionHelp(commandAnnotation, bundle)
                     ;
@@ -43,24 +46,19 @@ public class HelpGenerator {
 
     private static String getSubCommands(Cli.Command commandAnnotation, final Bundle bundle) {
         return Stream.stream(commandAnnotation.subCommands())
-                .map(new Function<Class, Cli.Command>() {
+                .map(new Function<Class, String>() {
                     @Override
-                    public Cli.Command apply(Class aClass) {
-                        return AnnotationHelper.getCommandAnnotation(aClass);
-                    }
-                })
-                .map(new Function<Cli.Command, String>() {
-                    @Override
-                    public String apply(Cli.Command c) {
-                        return OutputHelper.format(OutputHelper.ofSize(c.name(), 12) + bundle.apply(c.description()), ARGUMENT_LEVEL_SECTION);
+                    public String apply(Class aClass) {
+                        String commandName = OutputHelper.ofSize(getCommandName(aClass), 12);
+                        String description = bundle.apply(getCommandAnnotation(aClass).description());
+                        return OutputHelper.format(commandName + description, ARGUMENT_LEVEL_SECTION);
                     }
                 })
                 .reduce("COMMAND:", join("\n"));
     }
 
     private static String getUsage(Object command) {
-        Cli.Command commandAnnotation = AnnotationHelper.getCommandAnnotation(command);
-        return OutputHelper.format("USAGE: " + commandAnnotation.name() + " [OPTION...] " +
+        return OutputHelper.format("USAGE: " + getCommandName(command.getClass()) + getUsageOptions(command) +
                         FieldsProvider.getArgumentStream(command.getClass())
                                 .map(new Function<Field, String>() {
                                     @Override
@@ -74,6 +72,20 @@ public class HelpGenerator {
                                 })
                                 .reduce("", join(" ")),
                 TOP_LEVEL_SECTION);
+    }
+
+    private static String getUsageOptions(Object command) {
+        return FieldsProvider
+                .getOptionStream(command.getClass())
+                .first()
+                .map(new Function<Field, String>() {
+                    @Nonnull
+                    @Override
+                    public String apply(@Nonnull Field field) {
+                        return " [OPTION...]";
+                    }
+                })
+                .or("");
     }
 
     private static String getArgumentHelp(Object command, final Bundle bundle) {
@@ -92,7 +104,15 @@ public class HelpGenerator {
                         return OutputHelper.format(s, ARGUMENT_LEVEL_SECTION);
                     }
                 })
-                .reduce("WHERE:", join("\n"));
+                .reduce(join("\n"))
+                .map(new Function<String, String>() {
+                    @Nonnull
+                    @Override
+                    public String apply(@Nonnull String argumentHelp) {
+                        return "WHERE:\n" + argumentHelp + "\n";
+                    }
+                })
+                .or("");
     }
 
     private static String getOptionHelp(Object command, final Bundle bundle) {
@@ -121,7 +141,15 @@ public class HelpGenerator {
                                 OutputHelper.format(bundle.apply(optionAnnotation.description()), OPTION_LEVEL_SECTION);
                     }
                 })
-                .reduce("OPTION:", join("\n"));
+                .reduce(join("\n"))
+                .map(new Function<String, String>() {
+                    @Nonnull
+                    @Override
+                    public String apply(@Nonnull String optionHelp) {
+                        return "OPTION:\n" + optionHelp + "\n";
+                    }
+                })
+                .or("");
     }
 
     private static String getValueString(Field optionField) {
@@ -144,7 +172,9 @@ public class HelpGenerator {
         return optionField.getType() == Boolean.class || optionField.getType() == boolean.class;
     }
 
-    private static String getNameAndDescription(Cli.Command commandAnnotation, Bundle bundle) {
-        return OutputHelper.format(commandAnnotation.name() + "\n" + bundle.apply(commandAnnotation.description()), TOP_LEVEL_SECTION);
+    private static String getNameAndDescription(Object command, Bundle bundle) {
+        String commandName = getCommandName(command.getClass());
+        String description = getCommandAnnotation(command.getClass()).description();
+        return OutputHelper.format(commandName + "\n" + bundle.apply(description), TOP_LEVEL_SECTION);
     }
 }

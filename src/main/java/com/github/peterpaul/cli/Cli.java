@@ -15,7 +15,7 @@ public @interface Cli {
     @Target({TYPE})
     @Retention(RUNTIME)
     @interface Command {
-        String name();
+        String name() default "";
 
         String description();
 

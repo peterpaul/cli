@@ -2,30 +2,43 @@
 
 An annotation based CLI command framework for Java.
 
-## Hello World
+<pre lang="Java">
+@Cli.Command(description = "Minimal example")
+public class HelloWorld {
+    public static void main(String[] args) {
+        ProgramRunner.run(HelloWorld.class, args);
+    }
 
-Below is a `Hello World` example, showcasing all annotations:
+    public void run() {
+        System.out.println("Hello World");
+    }
+}
+</pre>
+
+## Greeter example
+
+Below is a more extensive example, showcasing all annotations.
 
 <pre lang="Java">
-@Cli.Command(name = "HelloWorld", description = "some command")
-public class HelloWorld {
+@Cli.Command(name = "hello", description = "Example command using all cli annotations.")
+public class Greeter {
     @Cli.Option(description = "some option", shortName = 'U')
     private boolean uppercase;
 
     @Cli.Argument(description = "some argument")
     private String who;
 
+    public static void main(String[] args) {
+        ProgramRunner.run(Greeter.class, args);
+    }
+
     @Cli.Run
-    void perform() {
+    public void perform() {
         String value = "Hello " + who;
         if (uppercase) {
             value = value.toUpperCase();
         }
         System.out.println(value);
-    }
-    
-    public static void main(String[] args) {
-        ProgramRunner.run(HelloWorld.class, args);
     }
 }
 </pre>
@@ -51,18 +64,22 @@ When run without arguments, this will produce the following output:
 
 <pre>
 $ hello
-Error: Expected more arguments.
+Error: Expected argument who
 
-HelloWorld
-    some command
+hello
+    Example command using all cli annotations.
 
-USAGE: HelloWorld [OPTION...]  who
+USAGE: hello [OPTION...]  who
 WHERE:
     who:        some argument
 OPTION:
     -U,--uppercase=boolean ('true', 'false') 
                 some option
 </pre>
+
+## Run Command
+
+`ProgramRunner` searches for a void method without arguments annotated with `@Cli.Run` or, if not found, with the name `run`.
 
 ## Arguments
 
@@ -163,21 +180,21 @@ public class MyTypeParser implements ValueParser<MyType> {
 Value parsers can be registered in the `@Cli.Argument` annotation (see the bold sections.)
 
 <pre lang="java">
-@Cli.Command(name = "HelloWorldArg", description = "some command")
-public class HelloWorldArg {
+@Cli.Command(name = "GreeterMyType", description = "some command")
+public class GreeterMyType {
     @Cli.Option(description = "some option", shortName = 'U')
     private boolean uppercase;
 
-    @Cli.Argument(description = "some argument", <strong>parser = MyTypeParser.class</strong>)
-    private <strong>MyType</strong> who;
+    @Cli.Argument(description = "some argument")
+    private MyType who;
 
     public static void main(String[] args) {
-        ProgramRunner.run(HelloWorldArg.class, args);
+        ProgramRunner.run(GreeterMyType.class, args);
     }
 
     @Cli.Run
     public void perform() {
-        String value = "Hello " + <strong>who.getValue()</strong>;
+        String value = "Hello " + who.getValue();
         if (uppercase) {
             value = value.toUpperCase();
         }

@@ -84,6 +84,6 @@ public abstract class AnnotationHelper {
     }
 
     public static String getCommandName(Class aClass) {
-        return getCommandAnnotation(aClass).name();
+        return fromEmpty(getCommandAnnotation(aClass).name()).or(aClass.getSimpleName());
     }
 }
