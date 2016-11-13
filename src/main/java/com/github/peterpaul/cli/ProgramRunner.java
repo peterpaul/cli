@@ -55,41 +55,40 @@ public class ProgramRunner {
         }
         final String subCommandArgument = argumentList.remove(0);
         instantiateSubCommand(subCommandMapper, subCommandArgument)
-                .peek(new Consumer<Object>() {
-                    @Override
-                    public void consume(final Object o) {
-                        CommandRunner.runCompositeCommand(command, new Runner() {
+                .consumeOr(new Consumer<Object>() {
+                               @Override
+                               public void consume(final Object o) {
+                                   CommandRunner.runCompositeCommand(command, new Runner() {
+                                       @Override
+                                       public void run() {
+                                           ProgramRunner.run(o, argumentList, optionMap);
+                                       }
+                                   });
+                               }
+                           },
+                        new Runner() {
                             @Override
                             public void run() {
-                                ProgramRunner.run(o, argumentList, optionMap);
+                                if (subCommandArgument.equals("help")) {
+                                    Object helpCommand = stream(argumentList)
+                                            .first()
+                                            .flatMap(new Function<String, Option<Object>>() {
+                                                @Override
+                                                public Option<Object> apply(String arg) {
+                                                    return instantiateSubCommand(subCommandMapper, arg);
+                                                }
+                                            })
+                                            .or(Suppliers.of(command));
+                                    System.out.println(HelpGenerator.generateHelp(helpCommand));
+                                } else {
+                                    String subCommandsString = stream(commandAnnotation.subCommands())
+                                            .map(GET_COMMAND_NAME)
+                                            .reduce(Reductions.join(", "))
+                                            .or("");
+                                    throw new ValueParseException("Not a subcommand: '" + subCommandArgument + "', allowed are [" + subCommandsString + ']');
+                                }
                             }
                         });
-                    }
-                })
-                .or(new Supplier<Boolean>() {
-                    @Override
-                    public Boolean get() {
-                        if (subCommandArgument.equals("help")) {
-                            Object helpCommand = stream(argumentList)
-                                    .first()
-                                    .flatMap(new Function<String, Option<Object>>() {
-                                        @Override
-                                        public Option<Object> apply(String arg) {
-                                            return instantiateSubCommand(subCommandMapper, arg);
-                                        }
-                                    })
-                                    .or(Suppliers.of(command));
-                            System.out.println(HelpGenerator.generateHelp(helpCommand));
-                        } else {
-                            String subCommandsString = stream(commandAnnotation.subCommands())
-                                    .map(GET_COMMAND_NAME)
-                                    .reduce(Reductions.join(", "))
-                                    .or("");
-                            throw new ValueParseException("Not a subcommand: '" + subCommandArgument + "', allowed are [" + subCommandsString + ']');
-                        }
-                        return true;
-                    }
-                });
     }
 
     private static Option<Object> instantiateSubCommand(Function<String, Option<Class>> subCommandMapper, String subCommandName) {
