@@ -129,6 +129,48 @@ private MyType option;
 Boolean options don't need to be given a value. If the option is present on the command line, but the value is not specified, the value will be set to `true`. 
 
 ## Composite Commands
+
+Composite commands can be created by defining `subCommands` on a command without any arguments.`
+
+<pre lang="Java">
+@Cli.Command(
+        description = "Composite command example",
+        subCommands = {HelloWorld.class, Greeter.class, GreeterMyType.class}
+)
+public class ExampleProgram {
+    public static void main(String[] args) {
+        ProgramRunner.run(ExampleProgram.class, args);
+    }
+}
+</pre>
+
+Composite commands support the `help` command, which generates usage information about the composite command, or any of it's subcommands. For example when invoked with `ExampleProgram help`, it generates the following output.
+
+<pre>
+ExampleProgram
+    Composite command example
+
+USAGE: ExampleProgram COMMAND
+COMMAND:
+    HelloWorld  Minimal example
+    hello       Example command using all cli annotations.
+    GreeterMyType some command
+</pre>
+
+When invoked with `ExampleProgram help hello` it generates the following output.
+
+<pre>
+hello
+    Example command using all cli annotations.
+
+USAGE: hello [OPTION...] who
+WHERE:
+    who:        some argument
+OPTION:
+    -U,--uppercase=boolean ('true', 'false') 
+                some option
+</pre>
+
 ## ValueParser
 
 Next to supporting some standard types as arguments and options, ProgramRunner is extensible with additional parsers. Additional value parsers are discovered using `ServiceLoader`, or via the `parser` option at the `@Cli.Argument` and `@Cli.Option` annotations.
