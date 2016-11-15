@@ -15,12 +15,12 @@ public class HelloWorld {
 }
 </pre>
 
-- [Greeter example](#greeterexample)
-- [Run Command](#runcommand)
+- [Greeter example](#greeter-example)
+- [Run Command](#run-command)
 - [Arguments](#arguments)
 - [Options](#options)
-    - [Boolean Options](#booleanoptions)
-- [Composite Commands](#compositecommands)
+    - [Boolean Options](#boolean-options)
+- [Composite Commands](#composite-commands)
 - [ValueParser](#valueparser)
 - [Instantiator](#instantiator)
 - [I18n](#i18n)
