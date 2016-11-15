@@ -6,7 +6,7 @@ import com.github.peterpaul.cli.ProgramRunner;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-@Cli.Command(description = "command.hello", resourceBundle = "greeter")
+@Cli.Command(name = "hello", description = "command.hello", resourceBundle = "greeter")
 public class InternationalizedGreeter {
     @Cli.Option(description = "option.uppercase", shortName = 'U')
     private boolean uppercase;

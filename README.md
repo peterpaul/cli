@@ -328,7 +328,7 @@ Internationalization is supported for the descriptions of commands, options and 
 The following example shows an internationalized variant of the Greeter we saw before. Note that the same resource bundle is also used in the run method.
 
 <pre lang="Java">
-@Cli.Command(description = "command.hello", resourceBundle = "greeter")
+@Cli.Command(name = "hello", description = "command.hello", resourceBundle = "greeter")
 public class InternationalizedGreeter {
     @Cli.Option(description = "option.uppercase", shortName = 'U')
     private boolean uppercase;
@@ -370,10 +370,10 @@ Hi there
 Generated help output would be
 
 <pre>
-InternationalizedGreeter
+hello
     Friendly greeter application.
 
-USAGE: InternationalizedGreeter [OPTION...] who
+USAGE: hello [OPTION...] who
 WHERE:
     who:        Who to greet.
 OPTION:
@@ -383,5 +383,5 @@ OPTION:
 
 ## TODO
 
-[ ] Internationalized error messages.
-[ ] Parsing of combined shortNames of boolean options, as in `tar -xzvf file.tar.gz`.
+- [ ] Internationalized error messages.
+- [ ] Parsing of combined shortNames of boolean options, as in `tar -xzvf file.tar.gz`.
