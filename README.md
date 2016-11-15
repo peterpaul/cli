@@ -322,3 +322,66 @@ A custom `Instantiator` can be registered via `ServiceLoader` in the file `META-
 This mechanism can be used to hook up specific injection framework.
 
 ## I18n
+
+Internationalization is supported for the descriptions of commands, options and arguments by specifying `resourceBundle` in the `@Cli.Command` annotation. The values of the `description` attributes are used as keys for the bundle.
+
+The following example shows an internationalized variant of the Greeter we saw before. Note that the same resource bundle is also used in the run method.
+
+<pre lang="Java">
+@Cli.Command(description = "command.hello", resourceBundle = "greeter")
+public class InternationalizedGreeter {
+    @Cli.Option(description = "option.uppercase", shortName = 'U')
+    private boolean uppercase;
+
+    @Cli.Argument(description = "argument.who")
+    private String who;
+
+    public static void main(String[] args) {
+        ProgramRunner.run(InternationalizedGreeter.class, args);
+    }
+
+    public void run() {
+        ResourceBundle bundle = ResourceBundle.getBundle("greeter", Locale.getDefault());
+        String value = bundle.getString("hello") + " " + who;
+        if (uppercase) {
+            value = value.toUpperCase();
+        }
+        System.out.println(value);
+    }
+}
+</pre>
+
+An example resource bundle would be the following `greeter.properties`.
+
+<pre lang="Java">
+option.uppercase =Generate output in uppercase.
+argument.who     =Who to greet.
+command.hello    =Friendly greeter application.
+hello            =Hi
+</pre>
+
+Example output would be
+
+<pre>
+$ hello there
+Hi there
+</pre>
+
+Generated help output would be
+
+<pre>
+InternationalizedGreeter
+    Friendly greeter application.
+
+USAGE: InternationalizedGreeter [OPTION...] who
+WHERE:
+    who:        Who to greet.
+OPTION:
+    -U,--uppercase=boolean ('true', 'false') 
+                Generate output in uppercase.
+</pre>
+
+## TODO
+
+[ ] Internationalized error messages.
+[ ] Parsing of combined shortNames of boolean options, as in `tar -xzvf file.tar.gz`.
