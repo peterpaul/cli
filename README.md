@@ -15,6 +15,17 @@ public class HelloWorld {
 }
 </pre>
 
+- [Greeter example](#greeterexample)
+- [Run Command](#runcommand)
+- [Arguments](#arguments)
+- [Options](#options)
+    - [Boolean Options](#booleanoptions)
+- [Composite Commands](#compositecommands)
+- [ValueParser](#valueparser)
+- [Instantiator](#instantiator)
+- [I18n](#i18n)
+- [TODO](#todo)
+
 ## Greeter example
 
 Below is a more extensive example, showcasing all annotations.
