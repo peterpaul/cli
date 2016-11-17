@@ -1,5 +1,0 @@
-com.github.peterpaul.cli.parser.BooleanValueParser
-com.github.peterpaul.cli.parser.FileValueParser
-com.github.peterpaul.cli.parser.IntValueParser
-com.github.peterpaul.cli.parser.StringValueParser
-com.github.peterpaul.cli.parser.UrlValueParser

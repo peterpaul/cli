@@ -1,0 +1,5 @@
+net.kleinhaneveld.cli.parser.BooleanValueParser
+net.kleinhaneveld.cli.parser.FileValueParser
+net.kleinhaneveld.cli.parser.IntValueParser
+net.kleinhaneveld.cli.parser.StringValueParser
+net.kleinhaneveld.cli.parser.UrlValueParser

@@ -215,7 +215,7 @@ Next to supporting some standard types as arguments and options, ProgramRunner i
 Value parsers must implement the `ValueParser` interface:
 
 <pre lang="Java">
-package com.github.peterpaul.cli.parser;
+package net.kleinhaneveld.cli.parser;
 
 public interface ValueParser<T> {
     Class[] getSupportedClasses();
@@ -282,10 +282,10 @@ public class GreeterMyType {
 }
 </pre>
 
-Value parsers can also be registered via `ServiceLoader`. To do that add the a file named `META-INF/services/com.github.peterpaul.cli.parser.ValueParser` to the classpath with the class name of the parser:
+Value parsers can also be registered via `ServiceLoader`. To do that add the a file named `META-INF/services/net.kleinhaneveld.cli.parser.ValueParser` to the classpath with the class name of the parser:
 
 <pre lang="Java">
-com.github.peterpaul.cli.examples.MyTypeParser
+net.kleinhaneveld.cli.examples.MyTypeParser
 </pre>
 
 Then the specific value parser will be used automatically when arguments or options with any type in the `supportedClasses` are used.
@@ -321,14 +321,14 @@ There are several cases where `ProgramRunner` must create instances of classes. 
 It does this via an `Instantiator`.
 
 <pre lang="Java">
-package com.github.peterpaul.cli.instantiator;
+package net.kleinhaneveld.cli.instantiator;
 
 public interface Instantiator {
     <T> T instantiate(Class<T> aClass);
 }
 </pre>
 
-A custom `Instantiator` can be registered via `ServiceLoader` in the file `META-INF/services/com.github.peterpaul.cli.instantiator.Instantiator`.
+A custom `Instantiator` can be registered via `ServiceLoader` in the file `META-INF/services/net.kleinhaneveld.cli.instantiator.Instantiator`.
 
 This mechanism can be used to hook up specific injection framework.
 
