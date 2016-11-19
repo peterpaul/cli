@@ -396,3 +396,5 @@ OPTION:
 
 - [ ] Internationalized error messages.
 - [ ] Parsing of combined shortNames of boolean options, as in `tar -xzvf file.tar.gz`.
+- [ ] Detecting undefined options.
+- [ ] Analyzing whether subcommands don't override options.
