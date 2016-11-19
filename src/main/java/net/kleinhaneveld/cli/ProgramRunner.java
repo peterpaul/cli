@@ -13,7 +13,8 @@ import java.util.Map;
 
 import static net.kleinhaneveld.cli.AnnotationHelper.GET_COMMAND_NAME;
 import static net.kleinhaneveld.cli.AnnotationHelper.GET_NAME_TO_CLASS_MAP;
-import static net.kleinhaneveld.fn.Functions.mapper;
+import static net.kleinhaneveld.fn.Functions.getAndRemoveFrom;
+import static net.kleinhaneveld.fn.Functions.getFrom;
 import static net.kleinhaneveld.fn.Stream.stream;
 
 public class ProgramRunner {
@@ -99,7 +100,7 @@ public class ProgramRunner {
     private static Function<String, Option<Class>> getSubCommandMapper(Cli.Command commandAnnotation) {
         Map<String, Class> subCommandMap = stream(commandAnnotation.subCommands())
                 .toMap(GET_NAME_TO_CLASS_MAP);
-        return mapper(subCommandMap);
+        return getFrom(subCommandMap);
     }
 
     private static void setFieldValue(Object command, Field field, Object parsedValue) {
@@ -117,7 +118,7 @@ public class ProgramRunner {
         Option<String> valueFromCommandLine = stream(
                 "--" + name,
                 "-" + optionAnnotation.shortName())
-                .map(mapper(optionMap))
+                .map(getAndRemoveFrom(optionMap))
                 .filterMap(Functions.<Option<String>>identity())
                 .first();
         if (valueFromCommandLine.isPresent()) {
