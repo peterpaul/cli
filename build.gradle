@@ -16,6 +16,10 @@ repositories {
     mavenCentral()
 }
 
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.4.1'
+}
+
 dependencies {
     compile group: 'net.kleinhaneveld.fn', name: 'fn', version: '0.1.0'
     compile group: 'org.immutables', name: 'value', version: '2.3.2'
@@ -30,5 +34,74 @@ dependencies {
 uploadArchives {
     repositories {
         mavenLocal()
+    }
+}
+
+if (project.hasProperty('cli.deployment.enabled')) {
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                beforeDeployment {
+                    MavenDeployment deployment -> signing.signPom(deployment)
+                }
+
+                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+
+                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
+                }
+
+                pom.project {
+                    name 'Annotation based CLI framework for Java 7'
+                    description 'Annotation based CLI framework for Java 7'
+                    packaging 'jar'
+                    url 'https://github.com/peterpaul/cli'
+
+                    scm {
+                        connection 'scm:git:https://github.com/peterpaul/cli.git'
+                        developerConnection 'scm:git:https://github.com/peterpaul/cli.git'
+                        url 'https://github.com/peterpaul/cli'
+                    }
+
+                    licenses {
+                        license {
+                            name 'MIT License'
+                            url 'https://opensource.org/licenses/MIT'
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id 'peterpaul'
+                            name 'Peterpaul Taekele Klein Haneveld'
+                            email 'pp.kleinhaneveld@gmail.com'
+                        }
+                    }
+                }
+            }
+        }
+
+        signing {
+            required {
+                gradle.taskGraph.hasTask("uploadArchives")
+            }
+            sign configurations.archives
+        }
+
+        task javadocJar(type: Jar) {
+            classifier = 'javadoc'
+            from javadoc
+        }
+
+        task sourcesJar(type: Jar) {
+            classifier = 'sources'
+            from sourceSets.main.allSource
+        }
+
+        artifacts {
+            archives javadocJar, sourcesJar
+        }
     }
 }
