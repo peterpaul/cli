@@ -25,7 +25,7 @@ Available from maven central with the following coordinates:
 </dependency>
 ```
 
-##Contents
+## Contents
 
 - [Greeter example](#greeter-example)
 - [Run Command](#run-command)
