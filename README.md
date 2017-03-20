@@ -17,13 +17,13 @@ public class HelloWorld {
 
 Available from maven central with the following coordinates:
 
-<pre lang="xml">
+```xml
 <dependency>
     <groupId>net.kleinhaneveld.cli</groupId>
     <artifactId>cli</artifactId>
     <version>0.1.0</version>
 </dependency>
-</pre>
+```
 
 - [Greeter example](#greeter-example)
 - [Run Command](#run-command)
