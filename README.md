@@ -15,6 +15,16 @@ public class HelloWorld {
 }
 </pre>
 
+Available from maven central with the following coordinates:
+
+<pre lang="xml">
+<dependency>
+    <groupId>net.kleinhaneveld.cli</groupId>
+    <artifactId>cli</artifactId>
+    <version>0.1.0</version>
+</dependency>
+</pre>
+
 - [Greeter example](#greeter-example)
 - [Run Command](#run-command)
 - [Arguments](#arguments)
@@ -398,3 +408,4 @@ OPTION:
 - [ ] Parsing of combined shortNames of boolean options, as in `tar -xzvf file.tar.gz`.
 - [ ] Detecting undefined options.
 - [ ] Analyzing whether subcommands don't override options.
+- [ ] Bash autocompletion.
