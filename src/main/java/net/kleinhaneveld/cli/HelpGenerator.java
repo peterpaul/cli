@@ -49,9 +49,9 @@ public class HelpGenerator {
                 .map(new Function<Class, String>() {
                     @Override
                     public String apply(Class aClass) {
-                        String commandName = OutputHelper.ofSize(getCommandName(aClass), 12);
-                        String description = bundle.apply(getCommandAnnotation(aClass).description());
-                        return OutputHelper.format(commandName + description, ARGUMENT_LEVEL_SECTION);
+                        String commandName = OutputHelper.format(getCommandName(aClass), ARGUMENT_LEVEL_SECTION);
+                        String description = OutputHelper.format(bundle.apply(getCommandAnnotation(aClass).description()), OPTION_LEVEL_SECTION);
+                        return commandName + "\n" + description;
                     }
                 })
                 .reduce("COMMAND:", join("\n"));
@@ -94,14 +94,8 @@ public class HelpGenerator {
                     @Override
                     public String apply(Field arg) {
                         Cli.Argument argumentAnnotation = AnnotationHelper.getArgumentAnnotation(arg);
-                        return OutputHelper.ofSize(FieldsProvider.getName(arg, argumentAnnotation.name()) + ":",
-                                12) + bundle.apply(argumentAnnotation.description());
-                    }
-                })
-                .map(new Function<String, String>() {
-                    @Override
-                    public String apply(String s) {
-                        return OutputHelper.format(s, ARGUMENT_LEVEL_SECTION);
+                        return OutputHelper.format(FieldsProvider.getName(arg, argumentAnnotation.name()), ARGUMENT_LEVEL_SECTION) + "\n" +
+                                OutputHelper.format(bundle.apply(argumentAnnotation.description()), OPTION_LEVEL_SECTION);
                     }
                 })
                 .reduce(join("\n"))

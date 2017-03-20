@@ -5,7 +5,12 @@ import net.kleinhaneveld.cli.ProgramRunner;
 
 @Cli.Command(
         description = "Composite command example",
-        subCommands = {HelloWorld.class, Greeter.class, GreeterMyType.class}
+        subCommands = {
+                HelloWorld.class,
+                Greeter.class,
+                GreeterMyType.class,
+                ArgumentListCommand.class
+        }
 )
 public class ExampleProgram {
     public static void main(String[] args) {
